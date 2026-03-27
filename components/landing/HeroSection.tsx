@@ -81,7 +81,7 @@ export default function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
         >
           <Link
-            href="/devlens"
+            href="/dashboard"
             className="group relative px-8 py-4 rounded-2xl bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-white font-bold text-base shadow-2xl shadow-accent/30 hover:shadow-accent/40 transition-all hover:scale-105 active:scale-95 overflow-hidden"
           >
             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
