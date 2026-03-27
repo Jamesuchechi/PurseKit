@@ -79,37 +79,43 @@ export default function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-2">
-              {nav.map((item) => {
-                const Icon = item.icon;
-                const isActive = path === item.href;
-                
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`
-                      relative group flex items-center gap-2 px-4 py-2 rounded-xl
-                      text-sm font-medium transition-all duration-300
-                      hover:scale-105 active:scale-95
-                      ${isActive 
-                        ? `bg-gradient-to-r ${item.activeGradient} border border-${item.color}/30 text-${item.color}` 
-                        : "text-muted hover:text-foreground hover:bg-muted/50"
-                      }
-                    `}
-                    aria-current={isActive ? "page" : undefined}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeNav"
-                        className={`absolute inset-0 bg-gradient-to-r ${item.activeGradient} border border-${item.color}/30 rounded-xl`}
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                      />
-                    )}
-                    <Icon className="w-4 h-4 relative z-10" />
-                    <span className="relative z-10">{item.label}</span>
-                  </Link>
-                );
-              })}
+              {nav
+                .filter((item) => {
+                  const isPublicOrAuthPage = path === "/" || path.startsWith("/auth/");
+                  const isProtectedRoute = ["/devlens", "/specforge", "/chartgpt"].includes(item.href);
+                  return !(isPublicOrAuthPage && isProtectedRoute);
+                })
+                .map((item) => {
+                  const Icon = item.icon;
+                  const isActive = path === item.href;
+                  
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`
+                        relative group flex items-center gap-2 px-4 py-2 rounded-xl
+                        text-sm font-medium transition-all duration-300
+                        hover:scale-105 active:scale-95
+                        ${isActive 
+                          ? `bg-gradient-to-r ${item.activeGradient} border border-${item.color}/30 text-${item.color}` 
+                          : "text-muted hover:text-foreground hover:bg-muted/50"
+                        }
+                      `}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeNav"
+                          className={`absolute inset-0 bg-gradient-to-r ${item.activeGradient} border border-${item.color}/30 rounded-xl`}
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      <Icon className="w-4 h-4 relative z-10" />
+                      <span className="relative z-10">{item.label}</span>
+                    </Link>
+                  );
+                })}
             </div>
 
             {/* Right Actions */}
@@ -233,30 +239,36 @@ export default function Navbar() {
 
                 {/* Navigation Links */}
                 <nav className="space-y-2" role="navigation">
-                  {nav.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = path === item.href;
-                    
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setMobileOpen(false)}
-                        className={`
-                          flex items-center gap-3 px-4 py-3 rounded-xl
-                          text-base font-medium transition-all
-                          ${isActive 
-                            ? `bg-gradient-to-r ${item.activeGradient} border border-${item.color}/30 text-${item.color}` 
-                            : "hover:bg-muted/50"
-                          }
-                        `}
-                        aria-current={isActive ? "page" : undefined}
-                      >
-                        <Icon className="w-5 h-5" />
-                        {item.label}
-                      </Link>
-                    );
-                  })}
+                  {nav
+                    .filter((item) => {
+                      const isPublicOrAuthPage = path === "/" || path.startsWith("/auth/");
+                      const isProtectedRoute = ["/devlens", "/specforge", "/chartgpt"].includes(item.href);
+                      return !(isPublicOrAuthPage && isProtectedRoute);
+                    })
+                    .map((item) => {
+                      const Icon = item.icon;
+                      const isActive = path === item.href;
+                      
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={`
+                            flex items-center gap-3 px-4 py-3 rounded-xl
+                            text-base font-medium transition-all
+                            ${isActive 
+                              ? `bg-gradient-to-r ${item.activeGradient} border border-${item.color}/30 text-${item.color}` 
+                              : "hover:bg-muted/50"
+                            }
+                          `}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <Icon className="w-5 h-5" />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
                 </nav>
 
                 {/* Divider */}
