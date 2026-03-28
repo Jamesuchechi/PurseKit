@@ -1,14 +1,7 @@
 "use client";
 
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
-import Link from "next/link";
-import { 
-  Brain, FileText, BarChart3, ArrowRight, Zap, Shield, Cpu, 
-  ChevronRight, Sparkles, Code, Globe, Lock, Users, Star,
-  Check, PlayCircle, TrendingUp, Activity, Database, Workflow
-} from "lucide-react";
-import Navbar from "@/components/shared/Navbar";
+import { motion, useScroll } from "framer-motion";
+import { useEffect, useState } from "react";
 import Footer from "@/components/shared/Footer";
 import HeroSection from "@/components/landing/HeroSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";

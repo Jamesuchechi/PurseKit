@@ -9,8 +9,10 @@ export type Module = "devlens" | "specforge" | "chartgpt";
 export interface HistoryItem<T = unknown> {
   id: string;
   module: Module;
-  createdAt: string;
+  title: string;
   input: string;
+  createdAt: string; // ISO string
+  timestamp: string; // Human-readable fallback
   result: T;
 }
 
@@ -80,36 +82,43 @@ export type SpecForgeAudience = "technical" | "product" | "executive";
 
 // ─── ChartGPT ───────────────────────────────────────────────
 
-export type ChartType = "bar" | "line" | "area" | "pie" | "scatter";
-export type ChartColor = "accent" | "amber" | "violet";
-
 export interface ChartConfig {
-  chartType: ChartType;
-  xKey: string;
-  yKey: string;
+  type: 
+    | "bar" | "line" | "area" | "pie" | "scatter" 
+    | "radar" | "composed" | "treemap" | "radialBar" 
+    | "funnel" | "bubble" | "heatmap" | "sankey" 
+    | "gantt" | "violin" | "box" | "chord" | "wordCloud";
   title: string;
-  color: ChartColor;
   description: string;
-  aggregation?: "sum" | "avg" | "count" | "none";
-}
-
-export interface ParsedData {
-  headers: string[];
-  rows: Record<string, string | number>[];
-  rowCount: number;
-  inferredTypes: Record<string, "number" | "string" | "date">;
+  xAxis: string;
+  yAxis?: string;
+  dataKeys: {
+    key: string;
+    label: string;
+    color?: string;
+    type?: "bar" | "line" | "area";
+  }[];
+  options?: {
+    stacked?: boolean;
+    horizontal?: boolean;
+    showLegend?: boolean;
+    showGrid?: boolean;
+    step?: boolean;
+    smooth?: boolean;
+  };
 }
 
 // ─── AI ─────────────────────────────────────────────────────
 
-export interface ClaudeMessage {
-  role: "user" | "assistant";
+export interface AiMessage {
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
-export interface ClaudeRequest {
-  system?: string;
-  userMessage: string;
+export interface AiRequestOptions {
+  provider?: "groq" | "mistral" | "openrouter";
+  model?: string;
+  temperature?: number;
+  max_tokens?: number;
   stream?: boolean;
-  maxTokens?: number;
 }

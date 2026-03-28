@@ -7,7 +7,7 @@ const key = new TextEncoder().encode(secretKey);
 
 export const SESSION_COOKIE_NAME = "pulsekit-session";
 
-export async function encrypt(payload: any) {
+export async function encrypt(payload: Record<string, unknown>) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -15,7 +15,7 @@ export async function encrypt(payload: any) {
     .sign(key);
 }
 
-export async function decrypt(input: string): Promise<any> {
+export async function decrypt(input: string): Promise<Record<string, unknown>> {
   const { payload } = await jwtVerify(input, key, {
     algorithms: ["HS256"],
   });
@@ -51,13 +51,14 @@ export async function updateSession(request: NextRequest) {
 
   // Refresh the session so it doesn't expire
   const parsed = await decrypt(session);
-  parsed.expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  
   const res = NextResponse.next();
   res.cookies.set({
     name: SESSION_COOKIE_NAME,
-    value: await encrypt(parsed),
+    value: await encrypt({ ...parsed, expires }),
     httpOnly: true,
-    expires: parsed.expires,
+    expires: expires,
   });
   return res;
 }

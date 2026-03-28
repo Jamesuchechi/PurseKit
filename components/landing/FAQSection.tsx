@@ -62,7 +62,7 @@ export default function FAQSection() {
           </h2>
           
           <p className="text-xl text-muted max-w-2xl mx-auto leading-relaxed">
-            Everything you need to know about PulseKit. Can't find what you're looking for? Contact our support team.
+            Everything you need to know about PulseKit. Can&apos;t find what you&apos;re looking for? Contact our support team.
           </p>
         </motion.div>
 

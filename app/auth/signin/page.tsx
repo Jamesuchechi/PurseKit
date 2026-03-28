@@ -127,7 +127,7 @@ export default function SignInPage() {
           </div>
 
           <div className="px-8 py-6 bg-muted/30 dark:bg-void/50 border-t border-border/50 text-center text-sm">
-            <span className="text-muted">Don't have an account? </span>
+            <span className="text-muted">Don&apos;t have an account? </span>
             <Link href="/auth/signup" className="font-bold text-accent hover:text-accent/80 transition-colors">
               Sign up for free
             </Link>

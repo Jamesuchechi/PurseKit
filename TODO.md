@@ -41,8 +41,8 @@ Each phase has a clear goal, deliverables, and definition of done.
 
 ### Types & Config
 - [x] Define all shared TypeScript interfaces in `types/index.ts`
-- [ ] Add `next-env.d.ts`
-- [ ] Create `eslint.config.mjs` with recommended Next.js rules
+- [x] Add `next-env.d.ts`
+- [x] Create `eslint.config.mjs` with recommended Next.js rules
 
 **✅ Phase 0 Done When:** Project runs locally (`npm run dev`), all pages render without errors, docs are complete.
 
@@ -52,45 +52,45 @@ Each phase has a clear goal, deliverables, and definition of done.
 > **Goal:** Build all reusable primitives — UI components, hooks, and library functions — that every module will depend on. Nothing module-specific yet.
 
 ### UI Primitives (`components/ui/`)
-- [ ] `Button.tsx` — variants: `primary`, `secondary`, `ghost`, `danger`; sizes: `sm`, `md`, `lg`; loading state
-- [ ] `Badge.tsx` — color variants: `accent`, `amber`, `violet`, `subtle`, `success`, `danger`
-- [ ] `Card.tsx` — accent border prop, hover glow, consistent padding
-- [ ] `Spinner.tsx` — sizes: `sm`, `md`, `lg`; color variants matching theme
-- [ ] `Textarea.tsx` — auto-resize, character count, error state, disabled state
-- [ ] `Input.tsx` — with icon slot, error state, disabled state
-- [ ] `Tooltip.tsx` — hover tooltip with arrow, keyboard accessible
-- [ ] `Dropdown.tsx` — select menu with search, keyboard nav
-- [ ] `Modal.tsx` — accessible dialog with backdrop, focus trap, Escape to close
-- [ ] `Tabs.tsx` — horizontal tabs with active indicator animation
-- [ ] `Skeleton.tsx` — animated loading placeholders for text, block, and card shapes
-- [ ] `EmptyState.tsx` — icon + heading + subtext + optional CTA slot
-- [ ] `ErrorState.tsx` — icon + message + retry button slot
-- [ ] `CopyButton.tsx` — copies text to clipboard, shows checkmark on success
-- [ ] `Toast.tsx` — success/error/info toasts, auto-dismiss, queue management
+- [x] `Button.tsx` — variants: `primary`, `secondary`, `ghost`, `danger`; sizes: `sm`, `md`, `lg`; loading state
+- [x] `Badge.tsx` — color variants: `accent`, `amber`, `violet`, `subtle`, `success`, `danger`
+- [x] `Card.tsx` — accent border prop, hover glow, consistent padding
+- [x] `Spinner.tsx` — sizes: `sm`, `md`, `lg`; color variants matching theme
+- [x] `Textarea.tsx` — auto-resize, character count, error state, disabled state
+- [x] `Input.tsx` — with icon slot, error state, disabled state
+- [x] `Tooltip.tsx` — hover tooltip with arrow, keyboard accessible
+- [x] `Dropdown.tsx` — select menu with search, keyboard nav
+- [x] `Modal.tsx` — accessible dialog with backdrop, focus trap, Escape to close
+- [x] `Tabs.tsx` — horizontal tabs with active indicator animation
+- [x] `Skeleton.tsx` — animated loading placeholders for text, block, and card shapes
+- [x] `EmptyState.tsx` — icon + heading + subtext + optional CTA slot
+- [x] `ErrorState.tsx` — icon + message + retry button slot
+- [x] `CopyButton.tsx` — copies text to clipboard, shows checkmark on success
+- [x] `Toast.tsx` — success/error/info toasts, auto-dismiss, queue management
 
 ### Shared Components (`components/shared/`)
-- [ ] `Footer.tsx` — minimal footer with version, links, copyright
-- [ ] `PageHeader.tsx` — module icon + label + title + optional description slot
-- [ ] `HistorySidebar.tsx` — slide-in drawer, shared across all modules
-- [ ] `CommandPalette.tsx` — ⌘K modal with module navigation and action shortcuts
-- [ ] `ApiKeyBanner.tsx` — persistent warning banner if `NEXT_PUBLIC_ANTHROPIC_API_KEY` is not set
+- [x] `Footer.tsx` — minimal footer with version, links, copyright
+- [x] `PageHeader.tsx` — module icon + label + title + optional description slot
+- [x] `HistorySidebar.tsx` — slide-in drawer, shared across all modules
+- [x] `CommandPalette.tsx` — ⌘K modal with module navigation and action shortcuts
+- [x] `ApiKeyBanner.tsx` — persistent warning banner for multi-provider AI keys
 
 ### Library (`lib/`)
-- [ ] `anthropic.ts` — `callClaude()` fetch wrapper for `/v1/messages`; handles headers, auth, streaming flag
-- [ ] `prompts.ts` — `devlensPrompt()`, `specforgePrompt()`, `chartgptPrompt()` — all system + user prompt templates
-- [ ] `csv-parser.ts` — PapaParse wrapper; `parseCSV()`, `parseJSON()`, `inferColumnTypes()`
-- [ ] `utils.ts` — `cn()`, `formatBytes()`, `truncate()`, `downloadFile()`, `copyToClipboard()`, `slugify()`, `generateId()`
-- [ ] `export.ts` — `exportMarkdown()`, `exportJSON()`, `exportPNG()` utilities
+- [x] `ai.ts` — Unified AI Service (Groq/Mistral/OpenRouter) with server-side proxying
+- [x] `prompts.ts` — `devlensPrompt()`, `specforgePrompt()`, `chartgptPrompt()` — all system + user prompt templates
+- [x] `csv-parser.ts` — PapaParse wrapper; `parseCSV()`, `parseJSON()`, `inferColumnTypes()`
+- [x] `utils.ts` — `cn()`, `formatBytes()`, `truncate()`, `downloadFile()`, `copyToClipboard()`, `slugify()`, `generateId()`
+- [x] `export.ts` — `exportMarkdown()`, `exportJSON()`, `exportPNG()` utilities
 
 ### Custom Hooks (`hooks/`)
-- [ ] `useClaudeStream.ts` — streams Claude response token-by-token via SSE; exposes `{ output, isLoading, error, run, reset }`
-- [ ] `useClaudeJSON.ts` — one-shot Claude call that returns parsed JSON; exposes `{ data, isLoading, error, run }`
-- [ ] `useHistory.ts` — localStorage R/W per module namespace; exposes `{ items, save, remove, clear, find }`
-- [ ] `useFileUpload.ts` — file selection, type validation (CSV/JSON), auto-parse; exposes `{ file, parsedData, error, upload, reset }`
-- [ ] `useCopyToClipboard.ts` — wraps `navigator.clipboard`; exposes `{ copied, copy }`
-- [ ] `useLocalStorage.ts` — generic typed localStorage hook with SSR safety
-- [ ] `useDebounce.ts` — debounce a value with configurable delay
-- [ ] `useKeyboardShortcut.ts` — register global keyboard shortcuts with cleanup
+- [x] `useAiStream.ts` — streams AI response token-by-token via SSE; exposes `{ output, isLoading, error, run, reset }`
+- [x] `useAiJSON.ts` — one-shot AI call that returns parsed JSON; exposes `{ data, isLoading, error, run }`
+- [x] `useHistory.ts` — localStorage R/W per module namespace; exposes `{ items, save, remove, clear, find }`
+- [x] `useFileUpload.ts` — file selection, type validation (CSV/JSON), auto-parse; exposes `{ file, parsedData, error, upload, reset }`
+- [x] `useCopyToClipboard.ts` — wraps `navigator.clipboard`; exposes `{ copied, copy }`
+- [x] `useLocalStorage.ts` — generic typed localStorage hook with SSR safety
+- [x] `useDebounce.ts` — debounce a value with configurable delay
+- [x] `useKeyboardShortcut.ts` — register global keyboard shortcuts with cleanup
 
 **✅ Phase 1 Done When:** All primitives render in isolation, hooks work in a test component, `callClaude()` returns a real response from the API.
 
@@ -109,7 +109,7 @@ Each phase has a clear goal, deliverables, and definition of done.
 - [ ] Error handling: malformed file, unsupported format, empty file
 
 ### UI — Upload Step
-- [ ] `FileDropzone.tsx` — drag-and-drop zone + click-to-browse; accepts `.csv` and `.json`
+- [ ] `FileDropzone.tsx` — drag-and-drop zone + click-to-browse; accepts `.csv`, 'excel files' and `.json`
 - [ ] Upload progress indicator
 - [ ] File metadata display (name, size, row count, column count)
 - [ ] `DataPreview.tsx` — styled table of first 10 rows with column type badges
@@ -132,6 +132,19 @@ Each phase has a clear goal, deliverables, and definition of done.
 - [ ] **Area Chart** — `AreaChart` with gradient fill
 - [ ] **Pie Chart** — `PieChart` with `Cell` colors, `Label`
 - [ ] **Scatter Chart** — `ScatterChart` with axis labels
+- [ ] **Heatmap** — `Heatmap` with color scale
+- [ ] **Funnel Chart** — `FunnelChart` with `Funnel` and `LabelList`
+- [ ] **Radar Chart** — `RadarChart` with `PolarGrid`, `PolarAngleAxis`, `PolarRadiusAxis`, `Radar`, `Legend`
+- [ ] **Treemap** — `Treemap` with `Treemap` and `LabelList`
+- [ ] **Radial Bar Chart** — `RadialBarChart` with `RadialBar` and `LabelList`
+- [ ] **Bubble Chart** — `BubbleChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`
+- [ ] **Composed Chart** — `ComposedChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`, `Area`, `Bar`, `Line`
+- [ ] **Sankey Diagram** — `SankeyChart` with `Sankey` and `LabelList`
+- [ ] **Gantt Chart** — `GanttChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`, `Bar`
+- [ ] **Violin Plot** — `ViolinPlot` with `XAxis`, `YAxis`, `Tooltip`, `Legend`
+- [ ] **Box Plot** — `BoxPlot` with `XAxis`, `YAxis`, `Tooltip`, `Legend`
+- [ ] **Chord Diagram** — `ChordDiagram` with `Chord` and `LabelList`
+- [ ] **Word Cloud** — `WordCloud` with `WordCloud` and `LabelList`
 
 ### AI Integration
 - [ ] Wire `useClaudeJSON` hook into chart generation

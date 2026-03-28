@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import Link from "next/link";
-import { Brain, FileText, BarChart3, ArrowRight, Check, Code, Sparkles } from "lucide-react";
+import { Brain, FileText, BarChart3, ArrowRight, Check, Sparkles } from "lucide-react";
 
 const modules = [
   {

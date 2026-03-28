@@ -78,7 +78,7 @@ export default function TestimonialsSection() {
           </h2>
           
           <p className="text-xl text-muted max-w-3xl mx-auto leading-relaxed">
-            Hear from engineering teams and individual developers who've transformed their workflow with PulseKit.
+            Hear from engineering teams and individual developers who&apos;ve transformed their workflow with PulseKit.
           </p>
         </motion.div>
 
@@ -110,7 +110,7 @@ export default function TestimonialsSection() {
 
                 {/* Content */}
                 <p className="text-muted leading-relaxed mb-6 flex-1">
-                  "{testimonial.content}"
+                  &quot;{testimonial.content}&quot;
                 </p>
 
                 {/* Author */}

@@ -9,8 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
+    "html2canvas": "^1.4.1",
     "jose": "^6.2.2",
     "lucide-react": "^0.469.0",
     "next": "15.1.12",
@@ -20,7 +23,9 @@
     "react-dom": "^19.0.0",
     "react-markdown": "^9.0.1",
     "react-syntax-highlighter": "^15.6.1",
-    "recharts": "^2.13.0"
+    "recharts": "^2.15.4",
+    "tailwind-merge": "^3.5.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",

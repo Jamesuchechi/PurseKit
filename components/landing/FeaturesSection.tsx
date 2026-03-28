@@ -3,8 +3,17 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { 
-  Zap, Shield, Cpu, Globe, Lock, Users, 
-  Code, Activity, Database, Workflow, GitBranch, Boxes
+  Zap, 
+  Shield, 
+  Cpu, 
+  Globe, 
+  Lock, 
+  Users, 
+  Code, 
+  Activity, 
+  Database, 
+  GitBranch, 
+  Boxes
 } from "lucide-react";
 
 const features = [
@@ -145,7 +154,7 @@ export default function FeaturesSection() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="mt-16 text-center"
         >
-          <p className="text-muted mb-4">And that's just the beginning...</p>
+          <p className="text-muted mb-4">And that&apos;s just the beginning...</p>
           <motion.a
             href="/features"
             className="inline-flex items-center gap-2 text-accent font-bold hover:gap-3 transition-all group"

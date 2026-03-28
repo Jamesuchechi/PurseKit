@@ -53,7 +53,7 @@ export default function CTASection() {
           </h2>
 
           <p className="text-xl sm:text-2xl text-muted max-w-3xl mx-auto leading-relaxed mb-12">
-            Join thousands of engineers and data scientists who've accelerated their workflow with AI.
+            Join thousands of engineers and data scientists who&apos;ve accelerated their workflow with AI.
             <span className="block mt-2 text-foreground font-semibold">No credit card required. Start for free.</span>
           </p>
 
