@@ -85,7 +85,7 @@ Each phase has a clear goal, deliverables, and definition of done.
 ### Custom Hooks (`hooks/`)
 - [x] `useAiStream.ts` — streams AI response token-by-token via SSE; exposes `{ output, isLoading, error, run, reset }`
 - [x] `useAiJSON.ts` — one-shot AI call that returns parsed JSON; exposes `{ data, isLoading, error, run }`
-- [x] `useHistory.ts` — localStorage R/W per module namespace; exposes `{ items, save, remove, clear, find }`
+- [x] `useHistory.ts` — DB-backed persistence (via /api/history); exposes `{ items, isLoading, save, remove, clear, find }`
 - [x] `useFileUpload.ts` — file selection, type validation (CSV/JSON), auto-parse; exposes `{ file, parsedData, error, upload, reset }`
 - [x] `useCopyToClipboard.ts` — wraps `navigator.clipboard`; exposes `{ copied, copy }`
 - [x] `useLocalStorage.ts` — generic typed localStorage hook with SSR safety
@@ -268,13 +268,14 @@ Each phase has a clear goal, deliverables, and definition of done.
 ---
 
 ## Phase 5 — History Vault
-> **Goal:** Every result from every module is saved, searchable, and retrievable — persisted in localStorage.
+> **Goal:** Every result from every module is saved, searchable, and retrievable — persisted in PostgreSQL.
 
 ### Data Model
-- [ ] `HistoryItem<T>` interface: `id`, `module`, `createdAt`, `title`, `input`, `result`
-- [ ] Auto-generate `id` (nanoid or crypto.randomUUID)
-- [ ] Auto-generate `title` from first line of input (truncated to 60 chars)
-- [ ] Store up to 100 items per module (FIFO eviction beyond limit)
+- [x] `HistoryItem<T>` interface: `id`, `module`, `createdAt`, `title`, `input`, `result`
+- [x] Auto-generate UUID for each item
+- [x] Auto-generate `title` from first line of input (truncated to 60 chars)
+- [x] Store items in `history_items` table with `userId` foreign key
+
 
 ### `HistorySidebar.tsx`
 - [ ] Slide-in drawer from right, triggered by history button in Navbar

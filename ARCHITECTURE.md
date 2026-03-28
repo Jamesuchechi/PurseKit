@@ -6,7 +6,7 @@ This document describes the technical architecture, data flow, and key design de
 
 ## Overview
 
-PulseKit is a **browser-first, zero-backend** application. All computation happens client-side. The only external dependency is the Anthropic Claude API, called directly from the browser via `fetch`.
+PulseKit is a **Next.js 15** application using a hybrid architecture: AI logic is handled via Anthropic's Claude API, while user data and history are persisted in a **PostgreSQL** database (via Neon) using **Drizzle ORM**.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -19,17 +19,18 @@ PulseKit is a **browser-first, zero-backend** application. All computation happe
 │        └───────────────┼───────────────────┘            │
 │                        │                                │
 │              ┌─────────▼──────────┐                     │
-│              │   lib/anthropic.ts │                     │
-│              │   (API client)     │                     │
+│              │   Next.js API      │                     │
+│              │   (Route Handlers) │                     │
 │              └─────────┬──────────┘                     │
 │                        │                                │
 └────────────────────────┼────────────────────────────────┘
-                         │ HTTPS (fetch)
-                         ▼
-              ┌──────────────────────┐
-              │  Anthropic Claude API │
-              │  /v1/messages         │
-              └──────────────────────┘
+                         │
+        ┌────────────────┴──────────────────┐
+        ▼                                   ▼
+┌────────────────────────┐      ┌────────────────────────┐
+│  Anthropic Claude API  │      │   PostgreSQL (Neon)    │
+│  (AI Intelligence)     │      │   (Data Persistence)   │
+└────────────────────────┘      └────────────────────────┘
 ```
 
 ---
@@ -104,14 +105,17 @@ pulsekit/
 │       └── ChartPromptInput.tsx  # Natural language input
 │
 ├── lib/
-│   ├── anthropic.ts              # fetch wrapper for /v1/messages
+│   ├── db.ts                     # Drizzle client (Neon)
+│   ├── schema.ts                 # Database schema definitions
+│   ├── users.ts                  # User creation and lookup (bcrypt)
+│   ├── auth.ts                   # JWT session management
 │   ├── prompts.ts                # All system + user prompt templates
 │   ├── csv-parser.ts             # PapaParse wrapper + column inference
 │   └── utils.ts                  # cn(), formatBytes(), truncate(), etc.
 │
 ├── hooks/
-│   ├── useClaudeStream.ts        # Streams Claude response token-by-token
-│   ├── useHistory.ts             # localStorage R/W for saved results
+│   ├── useAiStream.ts            # Streams AI response token-by-token
+│   ├── useHistory.ts             # API-backed persistence for results
 │   └── useFileUpload.ts          # File selection, parsing, validation
 │
 └── types/
@@ -190,8 +194,8 @@ No global state library (Redux, Zustand). State is local to each module:
 
 - **Component state** (`useState`) for UI inputs and transient values
 - **Custom hooks** encapsulate async logic and side effects
-- **localStorage** (via `useHistory`) for persisting saved results across sessions
-- No server-side sessions or databases
+- **PostgreSQL** (via `useHistory` → API) for persisting saved results across sessions
+- **JWT Cookies** for secure, server-side session management
 
 ---
 
@@ -199,8 +203,9 @@ No global state library (Redux, Zustand). State is local to each module:
 
 | Concern | Approach |
 |---|---|
-| API key exposure | Use Next.js Route Handler in production; `NEXT_PUBLIC_` for local dev only |
-| User data | Nothing stored server-side; localStorage only |
+| API key exposure | Use Next.js Route Handler in production |
+| User data | Persisted in PostgreSQL; isolated by userId |
+| Authentication | Bcrypt-hashed passwords + JWT session cookies |
 | CSV injection | Parse-only — no eval, no formula execution |
 | XSS in markdown | Use `react-markdown` with `rehype-sanitize` |
 
@@ -209,10 +214,11 @@ No global state library (Redux, Zustand). State is local to each module:
 ## Deployment
 
 ```
-Vercel (recommended)
+Vercel + Neon
 ├── Branch: main → Production
 ├── Branch: dev  → Preview
-└── Env vars: ANTHROPIC_API_KEY (server-side in prod)
+├── Env vars: ANTHROPIC_API_KEY (server-side)
+└── Env vars: DATABASE_URL (staged/prod Neon connection)
 ```
 
 For production, move the API call to `app/api/ai/route.ts` so the key is never exposed to the browser.

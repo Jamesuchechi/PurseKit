@@ -23,8 +23,9 @@ Complete technical reference for developers building on or contributing to Pulse
 
 | Variable | Required | Description |
 |---|---|---|
-| `NEXT_PUBLIC_ANTHROPIC_API_KEY` | ✅ Yes | Your Anthropic API key (local dev only) |
-| `ANTHROPIC_API_KEY` | ✅ Prod | Server-side key for Route Handler in production |
+| `DATABASE_URL` | ✅ Yes | Neon PostgreSQL connection string |
+| `JWT_SECRET` | ✅ Yes | Secret for signing session cookies |
+| `ANTHROPIC_API_KEY` | ✅ Yes | Your Anthropic API key |
 
 Create `.env.local` from the example:
 
@@ -210,10 +211,10 @@ Streams Claude's response token-by-token into `output` (string). Handles SSE par
 ### `useHistory`
 
 ```ts
-const { items, save, remove, clear } = useHistory<T>(namespace: string)
+const { items, isLoading, save, remove, clear } = useHistory<T>(module: Module)
 ```
 
-Persists results to `localStorage` under `pulsekit:history:{namespace}`. Each item has an auto-generated `id` and `createdAt` timestamp.
+Persists results to the **PostgreSQL database** via API routes (`/api/history`). Each item has an auto-generated UUID and is isolated by the authenticated user's ID.
 
 ---
 
