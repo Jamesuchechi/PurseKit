@@ -1,40 +1,17 @@
-import { SignJWT, jwtVerify } from "jose";
+import "server-only";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserByEmail, validatePassword } from "./users";
+import { 
+  encrypt, 
+  decrypt, 
+  SESSION_COOKIE_NAME, 
+  type SessionUser 
+} from "./session";
 
-const secretKey = process.env.JWT_SECRET;
-if (!secretKey) {
-  throw new Error("JWT_SECRET environment variable is not set");
-}
-const key = new TextEncoder().encode(secretKey);
+export { SESSION_COOKIE_NAME, type SessionUser };
 
-export const SESSION_COOKIE_NAME = "pulsekit-session";
-
-// ─── Session shape stored in the JWT ────────────────────────
-
-export interface SessionUser {
-  id: string;
-  email: string;
-  name: string;
-}
-
-// ─── JWT helpers ─────────────────────────────────────────────
-
-export async function encrypt(payload: Record<string, unknown>) {
-  return await new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("24h")
-    .sign(key);
-}
-
-export async function decrypt(input: string): Promise<Record<string, unknown>> {
-  const { payload } = await jwtVerify(input, key, {
-    algorithms: ["HS256"],
-  });
-  return payload;
-}
+// Session helpers moved to lib/session.ts
 
 // ─── Auth actions ────────────────────────────────────────────
 
