@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Zap, Mail, Lock, User, ArrowRight, Github, Chrome, ShieldCheck } from "lucide-react";
-import { loginAction } from "@/app/auth/actions";
+import { Zap, Mail, Lock, User, ArrowRight, Github, Chrome, ShieldCheck, AlertCircle } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { signupAction } from "@/app/auth/actions";
 
 export default function SignUpPage() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+
   return (
     <div className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden mesh-bg">
       {/* Background decoration */}
@@ -42,7 +46,13 @@ export default function SignUpPage() {
               </p>
             </div>
 
-            <form action={loginAction} className="space-y-4">
+            <form action={signupAction} className="space-y-4">
+              {error && (
+                <div className="flex items-center gap-2 text-sm text-danger bg-danger/5 border border-danger/10 p-3 rounded-xl">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
               <div className="space-y-4">
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

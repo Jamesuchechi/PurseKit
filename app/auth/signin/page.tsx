@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Zap, Mail, Lock, ArrowRight, Github, Chrome } from "lucide-react";
+import { Zap, Mail, Lock, ArrowRight, Github, Chrome, AlertCircle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { loginAction } from "@/app/auth/actions";
 
 export default function SignInPage() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
+  const error = searchParams.get("error");
 
   return (
     <div className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden mesh-bg">
@@ -49,6 +50,13 @@ export default function SignInPage() {
             <form action={loginAction} className="space-y-6">
               {/* Hidden field for post-login redirection */}
               <input type="hidden" name="next" value={next || ""} />
+
+              {error && (
+                <div className="flex items-center gap-2 text-sm text-danger bg-danger/5 border border-danger/10 p-3 rounded-xl">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
               
               <div className="space-y-4">
                 <div className="relative group">
