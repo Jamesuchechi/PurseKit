@@ -1,16 +1,10 @@
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "./schema";
-
-// Use ws for local Node.js environments to fix the 'fetch failed' issue
-if (typeof window === "undefined") {
-  neonConfig.webSocketConstructor = ws;
-}
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is not set");
 }
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+const queryClient = postgres(process.env.DATABASE_URL);
+export const db = drizzle(queryClient, { schema });
