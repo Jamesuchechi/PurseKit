@@ -1,8 +1,7 @@
 "use client";
 
-import { motion, useScroll } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import Footer from "@/components/shared/Footer";
 import HeroSection from "@/components/landing/HeroSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import ModulesShowcase from "@/components/landing/ModulesShowcase";
@@ -67,23 +66,6 @@ export default function Home() {
         <FAQSection />
         <CTASection />
       </div>
-
-      {/* Footer */}
-      <Footer />
-
-      {/* Scroll Indicator */}
-      <ScrollProgress />
     </div>
-  );
-}
-
-function ScrollProgress() {
-  const { scrollYProgress } = useScroll();
-  
-  return (
-    <motion.div
-      className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-violet to-amber z-50 origin-left"
-      style={{ scaleX: scrollYProgress }}
-    />
   );
 }

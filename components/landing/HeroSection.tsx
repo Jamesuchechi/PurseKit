@@ -4,8 +4,12 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Sparkles, PlayCircle, Code, Zap, Star, Check } from "lucide-react";
 import { useRef } from "react";
+import { useLocalSession } from "@/components/providers/LocalSessionProvider";
+import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
+  const router = useRouter();
+  const { initializeSession } = useLocalSession();
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -13,6 +17,12 @@ export default function HeroSection() {
   });
 
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  const handleTryIt = (e: React.MouseEvent) => {
+    e.preventDefault();
+    initializeSession();
+    router.push("/dashboard");
+  };
 
   return (
     <section ref={ref} className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
@@ -81,12 +91,13 @@ export default function HeroSection() {
         >
           <Link
             href="/dashboard"
+            onClick={handleTryIt}
             className="group relative px-8 py-4 rounded-2xl bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-white font-bold text-base shadow-2xl shadow-accent/30 hover:shadow-accent/40 transition-all hover:scale-105 active:scale-95 overflow-hidden"
           >
             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
             <div className="flex items-center gap-2 relative z-10">
               <Sparkles className="w-5 h-5" />
-              Start Building
+              Try it
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>

@@ -13,6 +13,7 @@ interface DataPreviewProps {
 
 export function DataPreview({ data, className }: DataPreviewProps) {
   const [activeTab, setActiveTab] = React.useState<"preview" | "summary">("preview");
+  const [showAllCols, setShowAllCols] = React.useState(false);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -100,7 +101,7 @@ export function DataPreview({ data, className }: DataPreviewProps) {
             )}
           </div>
         ) : (
-          <div className="p-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="p-4 sm:p-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="p-6 rounded-xl border border-border bg-background/30 space-y-2">
               <div className="flex items-center gap-2 text-muted mb-2">
                 <Info className="w-4 h-4" />
@@ -135,18 +136,36 @@ export function DataPreview({ data, className }: DataPreviewProps) {
       </div>
 
       {/* Column Type Map */}
-      <div className="flex flex-wrap gap-3">
-        {data.columns.map(col => (
-          <div key={col} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/50 bg-background/30 hover:border-accent/30 transition-all cursor-default group">
-            <span className="text-xs font-medium text-muted group-hover:text-foreground">{col}</span>
-            <div className={cn(
-              "p-1 rounded bg-background border border-border",
-              `text-${getTypeColor(data.types[col])}`
-            )}>
-              {getTypeIcon(data.types[col])}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground">Dataset Columns ({data.columns.length})</h3>
+          {data.columns.length > 8 && (
+            <button 
+              onClick={() => setShowAllCols(!showAllCols)}
+              className="text-xs font-semibold text-accent hover:text-accent/80 transition-colors px-2 py-1 rounded-md hover:bg-accent/10"
+            >
+              {showAllCols ? "Show Less" : "Show All"}
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {(showAllCols ? data.columns : data.columns.slice(0, 8)).map(col => (
+            <div key={col} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/50 bg-background/30 hover:border-accent/30 transition-all cursor-default group">
+              <span className="text-xs font-medium text-muted group-hover:text-foreground">{col}</span>
+              <div className={cn(
+                "p-1 rounded bg-background border border-border",
+                `text-${getTypeColor(data.types[col])}`
+              )}>
+                {getTypeIcon(data.types[col])}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+          {!showAllCols && data.columns.length > 8 && (
+            <div className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-dashed border-border/50 bg-muted/10">
+              <span className="text-xs font-medium text-muted">+{data.columns.length - 8} more</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

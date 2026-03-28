@@ -6,7 +6,7 @@ import { generateAiResponse, type AiMessage, type AiProvider } from "@/lib/ai";
  * Securely proxies requests to the selected provider.
  */
 
-export const runtime = "edge";
+// Using default Node.js runtime for superior local fetch stability
 
 interface RequestBody {
   prompt: string;

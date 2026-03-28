@@ -70,7 +70,7 @@ export function FileDropzone({
             onDrop={handleDrop}
             onClick={() => inputRef.current?.click()}
             className={cn(
-              "relative group cursor-pointer border-2 border-dashed rounded-2xl p-12 transition-all duration-300",
+              "relative group cursor-pointer border-2 border-dashed rounded-2xl p-6 sm:p-12 transition-all duration-300",
               "flex flex-col items-center justify-center text-center space-y-4",
               isDragging
                 ? "border-accent bg-accent/5 scale-[1.02]"
@@ -116,12 +116,12 @@ export function FileDropzone({
             key="file-info"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative p-8 rounded-2xl border border-border bg-background/50 backdrop-blur-sm overflow-hidden"
+            className="relative p-4 sm:p-8 rounded-2xl border border-border bg-background/50 backdrop-blur-sm overflow-hidden"
           >
             {/* Background Glow */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
             
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 sm:gap-6">
               <div className="p-4 rounded-xl bg-background border border-border shadow-sm">
                 {getFileIcon(selectedFile.name)}
               </div>

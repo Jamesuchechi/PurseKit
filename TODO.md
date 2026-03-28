@@ -101,69 +101,69 @@ Each phase has a clear goal, deliverables, and definition of done.
 > *Build this first — it's the most visual, great for early momentum and demos.*
 
 ### Data Layer
-- [ ] Wire `useFileUpload` into ChartGPT page
-- [ ] CSV parsing with PapaParse — handle comma, semicolon, tab delimiters
-- [ ] JSON flat-array parsing
-- [ ] Column type inference (`number` | `string` | `date`)
-- [ ] Validate: max 10MB, max 50k rows, required headers present
-- [ ] Error handling: malformed file, unsupported format, empty file
+- [x] Wire `useFileUpload` into ChartGPT page
+- [x] CSV parsing with PapaParse — handle comma, semicolon, tab delimiters
+- [x] JSON flat-array parsing
+- [x] Column type inference (`number` | `string` | `date`)
+- [x] Validate: max 10MB, max 50k rows, required headers present
+- [x] Error handling: malformed file, unsupported format, empty file
 
 ### UI — Upload Step
-- [ ] `FileDropzone.tsx` — drag-and-drop zone + click-to-browse; accepts `.csv`, 'excel files' and `.json`
-- [ ] Upload progress indicator
-- [ ] File metadata display (name, size, row count, column count)
-- [ ] `DataPreview.tsx` — styled table of first 10 rows with column type badges
-- [ ] Column selector (optional override for AI suggestion)
-- [ ] Clear/reset button
+- [x] `FileDropzone.tsx` — drag-and-drop zone + click-to-browse; accepts `.csv`, 'excel files' and `.json`
+- [x] Upload progress indicator
+- [x] File metadata display (name, size, row count, column count)
+- [x] `DataPreview.tsx` — styled table of first 10 rows with column type badges
+- [x] Column selector (optional override for AI suggestion)
+- [x] Clear/reset button
 
 ### UI — Chart Step
-- [ ] `ChartPromptInput.tsx` — natural language input with placeholder examples
-- [ ] Prompt suggestion chips: "show as bar chart", "compare by category", "trend over time"
-- [ ] Generate button with loading state
-- [ ] `ChartRenderer.tsx` — Recharts wrapper mapping `ChartConfig` to components
-- [ ] Chart type badge (auto-detected, e.g. "Bar Chart")
-- [ ] Chart title display (AI-generated)
-- [ ] Chart description display (AI-generated)
-- [ ] Responsive sizing with `ResponsiveContainer`
+- [x] `ChartPromptInput.tsx` — natural language input with placeholder examples
+- [x] Prompt suggestion chips: "show as bar chart", "compare by category", "trend over time"
+- [x] Generate button with loading state
+- [x] `ChartRenderer.tsx` — Recharts wrapper mapping `ChartConfig` to components
+- [x] Chart type badge (auto-detected, e.g. "Bar Chart")
+- [x] Chart title display (AI-generated)
+- [x] Chart description display (AI-generated)
+- [x] Responsive sizing with `ResponsiveContainer`
 
 ### Supported Chart Types
-- [ ] **Bar Chart** — `BarChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`
-- [ ] **Line Chart** — `LineChart` with smooth curves, dot markers
-- [ ] **Area Chart** — `AreaChart` with gradient fill
-- [ ] **Pie Chart** — `PieChart` with `Cell` colors, `Label`
-- [ ] **Scatter Chart** — `ScatterChart` with axis labels
-- [ ] **Heatmap** — `Heatmap` with color scale
-- [ ] **Funnel Chart** — `FunnelChart` with `Funnel` and `LabelList`
-- [ ] **Radar Chart** — `RadarChart` with `PolarGrid`, `PolarAngleAxis`, `PolarRadiusAxis`, `Radar`, `Legend`
-- [ ] **Treemap** — `Treemap` with `Treemap` and `LabelList`
-- [ ] **Radial Bar Chart** — `RadialBarChart` with `RadialBar` and `LabelList`
-- [ ] **Bubble Chart** — `BubbleChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`
-- [ ] **Composed Chart** — `ComposedChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`, `Area`, `Bar`, `Line`
-- [ ] **Sankey Diagram** — `SankeyChart` with `Sankey` and `LabelList`
-- [ ] **Gantt Chart** — `GanttChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`, `Bar`
-- [ ] **Violin Plot** — `ViolinPlot` with `XAxis`, `YAxis`, `Tooltip`, `Legend`
-- [ ] **Box Plot** — `BoxPlot` with `XAxis`, `YAxis`, `Tooltip`, `Legend`
-- [ ] **Chord Diagram** — `ChordDiagram` with `Chord` and `LabelList`
-- [ ] **Word Cloud** — `WordCloud` with `WordCloud` and `LabelList`
+- [x] **Bar Chart** — `BarChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`
+- [x] **Line Chart** — `LineChart` with smooth curves, dot markers
+- [x] **Area Chart** — `AreaChart` with gradient fill
+- [x] **Pie Chart** — `PieChart` with `Cell` colors, `Label`
+- [x] **Scatter Chart** — `ScatterChart` with axis labels
+- [x] **Heatmap** — `Heatmap` with color scale (Graceful Fallback)
+- [x] **Funnel Chart** — `FunnelChart` with `Funnel` and `LabelList`
+- [x] **Radar Chart** — `RadarChart` with `PolarGrid`, `PolarAngleAxis`, `PolarRadiusAxis`, `Radar`, `Legend`
+- [x] **Treemap** — `Treemap` with `Treemap` and `LabelList`
+- [x] **Radial Bar Chart** — `RadialBarChart` with `RadialBar` and `LabelList`
+- [x] **Bubble Chart** — `BubbleChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`
+- [x] **Composed Chart** — `ComposedChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`, `Area`, `Bar`, `Line`
+- [x] **Sankey Diagram** — `SankeyChart` with `Sankey` and `LabelList`
+- [x] **Gantt Chart** — `GanttChart` with `XAxis`, `YAxis`, `Tooltip`, `Legend`, `Bar` (Graceful Fallback)
+- [x] **Violin Plot** — `ViolinPlot` with `XAxis`, `YAxis`, `Tooltip`, `Legend` (Graceful Fallback)
+- [x] **Box Plot** — `BoxPlot` with `XAxis`, `YAxis`, `Tooltip`, `Legend` (Graceful Fallback)
+- [x] **Chord Diagram** — `ChordDiagram` with `Chord` and `LabelList` (Graceful Fallback)
+- [x] **Word Cloud** — `WordCloud` with `WordCloud` and `LabelList` (Graceful Fallback)
 
 ### AI Integration
-- [ ] Wire `useClaudeJSON` hook into chart generation
-- [ ] `chartgptPrompt()` — system prompt instructs Claude to return `ChartConfig` JSON only
-- [ ] Pass column names + sample rows + user description to Claude
-- [ ] Parse and validate returned `ChartConfig` before rendering
-- [ ] Fallback: if AI returns invalid config, show error + allow retry
+- [x] Wire `useClaudeJSON` hook into chart generation
+- [x] `chartgptPrompt()` — system prompt instructs Claude to return `ChartConfig` JSON only
+- [x] Pass column names + sample rows + user description to Claude
+- [x] Parse and validate returned `ChartConfig` before rendering
+- [x] Fallback: if AI returns invalid config, show error + allow retry
 
 ### Export & History
-- [ ] Download chart as PNG via `html2canvas` or `recharts` SVG export
-- [ ] Copy chart config as JSON
-- [ ] Save chart + config to history via `useHistory`
-- [ ] Load previous chart from history sidebar
+- [x] Download chart as PNG via `html2canvas` or `recharts` SVG export
+- [x] Copy chart config as JSON
+- [x] Save chart + config to history via `useHistory`
+- [x] Load previous chart from history sidebar
 
 ### Color Theming
-- [ ] Accent (cyan) palette for chart fills
-- [ ] Amber palette option
-- [ ] Violet palette option
-- [ ] Palette switcher UI
+- [x] Accent (cyan) palette for chart fills
+- [x] Amber palette option
+- [x] Violet palette option
+- [x] Palette switcher UI
 
 **✅ Phase 2 Done When:** Upload a CSV → type "show monthly sales as a bar chart" → chart renders correctly with title, axes, and correct data mapping.
 
@@ -196,7 +196,7 @@ Each phase has a clear goal, deliverables, and definition of done.
 - [ ] Copy full analysis as Markdown
 
 ### AI Integration
-- [ ] Wire `useClaudeStream` into DevLens page
+- [ ] Wire `Any Ai we are using` into DevLens page
 - [ ] `devlensPrompt(code, language)` — system prompt defines exact Markdown section format
 - [ ] Stream tokens into output state; parse sections client-side as stream completes
 - [ ] Handle: empty input, input too long (>50k chars), API error, timeout

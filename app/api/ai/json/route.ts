@@ -7,7 +7,7 @@ import { generateAiResponse, type AiMessage, type AiProvider } from "@/lib/ai";
  * then JSON.parses it before returning to the client.
  */
 
-export const runtime = "edge";
+// Using default Node.js runtime for superior local fetch stability
 
 export async function POST(req: NextRequest) {
   try {

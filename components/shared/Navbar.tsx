@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, FileText, BarChart3, Zap, Home, Moon, Sun, Menu, X, Sparkles, LogIn } from "lucide-react";
+import { Brain, FileText, BarChart3, Zap, Home, Moon, Sun, Menu, X, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocalSession } from "@/components/providers/LocalSessionProvider";
+import { User } from "lucide-react";
 
 const nav = [
   { href: "/", label: "Home", icon: Home },
@@ -15,6 +17,7 @@ const nav = [
 ];
 
 export default function Navbar() {
+  const { user } = useLocalSession();
   const path = usePathname();
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -151,23 +154,21 @@ export default function Navbar() {
                 </AnimatePresence>
               </button>
 
-              {/* Sign In Button */}
-              <Link
-                href="/auth/signin"
-                className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border/50 hover:border-border bg-background/50 hover:bg-muted/50 text-sm font-medium text-foreground transition-all hover:scale-105 active:scale-95"
-              >
-                <LogIn className="w-4 h-4" />
-                Sign In
-              </Link>
-
-              {/* Get Started Button */}
-              <Link
-                href="/devlens"
-                className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-white text-sm font-bold shadow-lg shadow-accent/20 hover:shadow-accent/30 transition-all hover:scale-105 active:scale-95"
-              >
-                <Sparkles className="w-4 h-4" />
-                Get Started
-              </Link>
+              {/* Try it Button or User Profile */}
+              {user ? (
+                <div className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border/50 bg-background/50 text-sm font-medium text-foreground">
+                  <User className="w-4 h-4 text-accent" />
+                  {user.name}
+                </div>
+              ) : (
+                <Link
+                  href="/dashboard"
+                  className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-white text-sm font-bold shadow-lg shadow-accent/20 hover:shadow-accent/30 transition-all hover:scale-105 active:scale-95"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Try it
+                </Link>
+              )}
 
               {/* Mobile Menu Toggle */}
               <button
@@ -275,25 +276,14 @@ export default function Navbar() {
                 <div className="border-t border-border" />
 
                 {/* Action Buttons */}
-                <div className="space-y-3">
                   <Link
-                    href="/auth/signin"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-border bg-background hover:bg-muted text-sm font-medium transition-all"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    Sign In
-                  </Link>
-
-                  <Link
-                    href="/devlens"
+                    href="/dashboard"
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-gradient-to-r from-accent to-accent/90 text-white text-sm font-bold shadow-lg shadow-accent/20"
                   >
                     <Sparkles className="w-4 h-4" />
-                    Get Started
+                    Try it
                   </Link>
-                </div>
               </div>
             </motion.div>
           </>

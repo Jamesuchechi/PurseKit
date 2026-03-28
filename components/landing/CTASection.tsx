@@ -3,8 +3,19 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Sparkles, Zap, Code, BarChart3, FileText } from "lucide-react";
+import { useLocalSession } from "@/components/providers/LocalSessionProvider";
+import { useRouter } from "next/navigation";
 
 export default function CTASection() {
+  const router = useRouter();
+  const { initializeSession } = useLocalSession();
+
+  const handleTryIt = (e: React.MouseEvent) => {
+    e.preventDefault();
+    initializeSession();
+    router.push("/dashboard");
+  };
+
   return (
     <section className="relative py-32 overflow-hidden">
       {/* Background Effects */}
@@ -54,28 +65,22 @@ export default function CTASection() {
 
           <p className="text-xl sm:text-2xl text-muted max-w-3xl mx-auto leading-relaxed mb-12">
             Join thousands of engineers and data scientists who&apos;ve accelerated their workflow with AI.
-            <span className="block mt-2 text-foreground font-semibold">No credit card required. Start for free.</span>
+            <span className="block mt-2 text-foreground font-semibold">Start building now — no complex setup required.</span>
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Link
-              href="/devlens"
+              href="/dashboard"
+              onClick={handleTryIt}
               className="group relative px-10 py-5 rounded-2xl bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-white font-bold text-lg shadow-2xl shadow-accent/30 hover:shadow-accent/40 transition-all hover:scale-105 active:scale-95 overflow-hidden"
             >
               <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
               <div className="flex items-center gap-3 relative z-10">
                 <Sparkles className="w-6 h-6" />
-                Get Started Free
+                Try it now
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </div>
-            </Link>
-
-            <Link
-              href="/pricing"
-              className="px-10 py-5 rounded-2xl border-2 border-border hover:border-accent/50 bg-background/50 dark:bg-void/50 hover:bg-muted/50 backdrop-blur-sm text-foreground font-bold text-lg transition-all hover:scale-105 active:scale-95"
-            >
-              View Pricing
             </Link>
           </div>
 
