@@ -15,6 +15,8 @@ import { downloadFile, truncate } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
 import { useSearchParams } from "next/navigation";
 import { useGlobalActions } from "@/hooks/useGlobalActions";
+import { Suspense } from "react";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const SAMPLE_CODE = `function processData(input) {
   if (input == null) return false;
@@ -29,7 +31,7 @@ const SAMPLE_CODE = `function processData(input) {
   return true;
 }`;
 
-export default function DevLensPage() {
+function DevLensContent() {
   const [code, setCode] = React.useState("");
   const [language, setLanguage] = React.useState("auto");
   const [errorLines, setErrorLines] = React.useState<number[]>([]);
@@ -38,6 +40,7 @@ export default function DevLensPage() {
   const { toast } = useToast();
   const { output, isLoading, error, run, reset, setOutput } = useAiStream();
   const { items, save } = useHistory("devlens");
+  const { addNotification } = useNotifications();
   const [saveInitiated, setSaveInitiated] = React.useState(false);
   const debouncedCode = useDebounce(code, 1000);
   const [isReady, setIsReady] = React.useState(false);
@@ -79,12 +82,20 @@ export default function DevLensPage() {
           title: truncate(code.split("\n")[0]?.trim() || "Analysis", 60),
           input: code,
           result: output,
-        }).then(() => {
+        }).then((item) => {
           toast("Analysis saved to history", "success");
+          addNotification({
+            type: "ai",
+            title: "Analysis Complete",
+            message: `DevLens analysis for '${item?.title}' is ready.`,
+            module: "devlens",
+            action: "View Report",
+            actionHref: `/devlens?id=${item?.id}`
+          });
         });
       }, 500);
     }
-  }, [isLoading, output, error, saveInitiated, code, save, toast]);
+  }, [isLoading, output, error, saveInitiated, code, save, toast, addNotification]);
 
   const handleAnalyze = () => {
     if (!code.trim()) return;
@@ -214,5 +225,17 @@ export default function DevLensPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DevLensPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent"></div>
+      </div>
+    }>
+      <DevLensContent />
+    </Suspense>
   );
 }

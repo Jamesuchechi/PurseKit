@@ -108,6 +108,20 @@ export interface ChartConfig {
   };
 }
 
+// ─── Notifications ──────────────────────────────────────────
+
+export interface Notification {
+  id: string;
+  type: "info" | "success" | "warning" | "error" | "ai";
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  module?: Module;
+  action?: string;
+  actionHref?: string;
+}
+
 // ─── AI ─────────────────────────────────────────────────────
 
 export interface AiMessage {

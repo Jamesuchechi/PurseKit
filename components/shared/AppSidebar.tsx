@@ -6,15 +6,17 @@ import {
   Brain, 
   FileText, 
   BarChart3, 
-  Zap, 
   LayoutDashboard, 
   History, 
   ChevronLeft,
   Moon,
   Sun,
   Sparkles,
-  LineChart
+  LineChart,
+  Bell,
+  Settings
 } from "lucide-react";
+import Image from "next/image";
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
@@ -28,6 +30,8 @@ const navItems = [
   { href: "/specforge", label: "SpecForge", icon: FileText, color: "text-amber" },
   { href: "/chartgpt", label: "ChartGPT", icon: BarChart3, color: "text-violet" },
   { href: "/analytics", label: "Analytics", icon: LineChart, color: "text-emerald-500" },
+  { href: "/notifications", label: "Notifications", icon: Bell, color: "text-indigo-500" },
+  { href: "/settings", label: "Settings", icon: Settings, color: "text-slate-400" },
 ];
 
 interface AppSidebarProps {
@@ -62,8 +66,14 @@ export function AppSidebar({ onHistoryClick, onChatClick }: AppSidebarProps) {
           isCollapsed ? "justify-center px-0" : "justify-between"
         )}>
           <Link href="/" className={cn("flex items-center gap-3 group", isCollapsed && "hidden")}>
-            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg shadow-accent/20">
-              <Zap className="w-5 h-5 text-white" />
+            <div className="relative w-9 h-9 rounded-xl bg-background flex items-center justify-center shadow-lg shadow-accent/5 overflow-hidden border border-border/50">
+              <Image 
+                src="/icon.png" 
+                alt="PulseKit Logo" 
+                width={36} 
+                height={36} 
+                className="w-full h-full object-cover"
+              />
             </div>
             {!isCollapsed && (
               <span className="font-display font-bold text-xl tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
@@ -73,8 +83,14 @@ export function AppSidebar({ onHistoryClick, onChatClick }: AppSidebarProps) {
           </Link>
 
           {isCollapsed && (
-            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg shadow-accent/20">
-              <Zap className="w-5 h-5 text-white" />
+            <div className="relative w-9 h-9 rounded-xl bg-background flex items-center justify-center shadow-lg shadow-accent/5 overflow-hidden border border-border/50">
+              <Image 
+                src="/icon.png" 
+                alt="PulseKit Logo" 
+                width={36} 
+                height={36} 
+                className="w-full h-full object-cover"
+              />
             </div>
           )}
           

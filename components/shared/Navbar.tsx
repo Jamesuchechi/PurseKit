@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, FileText, Zap, Home, Moon, Sun, Menu, X, Sparkles } from "lucide-react";
+import { Brain, FileText, Home, Moon, Sun, Menu, X, Sparkles } from "lucide-react";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 
 const nav = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/#features", label: "Features", icon: Zap },
+  { href: "/#features", label: "Features", icon: Sparkles },
   { href: "/#modules", label: "Modules", icon: Brain },
   { href: "/#faq", label: "FAQ", icon: FileText },
 ];
@@ -68,8 +69,14 @@ export default function Navbar() {
             >
               <div className="relative">
                 <div className="absolute inset-0 bg-accent/20 dark:bg-accent/30 blur-md rounded-lg group-hover:blur-lg transition-all" />
-                <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-accent to-accent/80 dark:from-accent/90 dark:to-accent/70 flex items-center justify-center shadow-lg">
-                  <Zap className="w-5 h-5 text-white drop-shadow-glow" />
+                <div className="relative w-9 h-9 rounded-lg bg-background flex items-center justify-center shadow-lg overflow-hidden border border-border/50">
+                  <Image 
+                    src="/icon.png" 
+                    alt="PulseKit Logo" 
+                    width={36} 
+                    height={36} 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
               <span className="font-display text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent tracking-tight">

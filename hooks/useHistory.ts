@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { type Module, type HistoryItem } from "@/types";
+import { generateId } from "@/lib/utils";
 
 /**
  * Hook for managing module-specific history backed by localStorage.
@@ -48,7 +49,7 @@ export function useHistory<T = unknown>(module: Module) {
     const now = new Date();
     const newItem: HistoryItem<T> = {
       ...itemData,
-      id: crypto.randomUUID(),
+      id: generateId(),
       module,
       createdAt: now.toISOString(),
       timestamp: now.toLocaleString(),

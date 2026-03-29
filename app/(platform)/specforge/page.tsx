@@ -17,10 +17,12 @@ import { useToast } from "@/components/ui/Toast";
 import { useModuleContext } from "@/context/ModuleContext";
 import { useGlobalActions } from "@/hooks/useGlobalActions";
 import { downloadFile } from "@/lib/utils";
+import { Suspense } from "react";
+import { useNotifications } from "@/hooks/useNotifications";
 
 type Step = "input" | "generating" | "result";
 
-export default function SpecForgePage() {
+function SpecForgeContent() {
   const [step, setStep] = React.useState<Step>("input");
   
   // Form State
@@ -37,6 +39,7 @@ export default function SpecForgePage() {
   const { updateContext } = useModuleContext();
   const { output, isLoading, error, run, reset, setOutput } = useAiStream();
   const { items, save } = useHistory("specforge");
+  const { addNotification } = useNotifications();
   const debouncedDesc = useDebounce(description, 1000);
   const debouncedContext = useDebounce(context, 1000);
   const [isReady, setIsReady] = React.useState(false);
@@ -107,12 +110,20 @@ export default function SpecForgePage() {
           title: truncate(description.split("\n")[0]?.trim() || "PRD", 60),
           input: JSON.stringify({ description, audience, scope, context }),
           result: output,
-        }).then(() => {
+        }).then((item) => {
           toast("PRD saved to history", "success");
+          addNotification({
+            type: "ai",
+            title: "PRD Generated",
+            message: `SpecForge document for '${item?.title}' is ready.`,
+            module: "specforge",
+            action: "View Document",
+            actionHref: `/specforge?id=${item?.id}`
+          });
         });
       }, 500);
     }
-  }, [isLoading, output, error, saveInitiated, description, audience, scope, context, save, step, toast, updateContext]);
+  }, [isLoading, output, error, saveInitiated, description, audience, scope, context, save, step, toast, updateContext, addNotification]);
 
   const handleGenerate = () => {
     if (!description.trim()) return;
@@ -254,5 +265,17 @@ export default function SpecForgePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SpecForgePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent"></div>
+      </div>
+    }>
+      <SpecForgeContent />
+    </Suspense>
   );
 }

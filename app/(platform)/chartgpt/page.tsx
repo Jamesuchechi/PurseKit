@@ -20,14 +20,17 @@ import { useModuleContext } from "@/context/ModuleContext";
 import { useGlobalActions } from "@/hooks/useGlobalActions";
 import type { ChartConfig } from "@/types";
 import { type ParsedData, inferColumnTypes } from "@/lib/csv-parser";
+import { Suspense } from "react";
+import { useNotifications } from "@/hooks/useNotifications";
 
-export default function ChartGPTPage() {
+function ChartGPTContent() {
   const { file, parsedData, error: uploadError, isLoading: isUploading, upload, reset: resetFile, setParsedData } = useFileUpload();
   const { data: rawChartConfig, isLoading: isAnalyzing, error: aiError, run: runAi, reset: resetAi, setData: setAiData } = useAiJSON<ChartConfig>();
   
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const history = useHistory<{ config: ChartConfig; data: ParsedData }>("chartgpt");
+  const { addNotification } = useNotifications();
   const { updateContext } = useModuleContext();
 
   const [step, setStep] = React.useState<"upload" | "preview" | "visualize">("upload");
@@ -85,8 +88,16 @@ export default function ChartGPTPage() {
           title: config.title || p,
           input: p,
           result: { config, data: parsedData! },
-        }).then(() => {
+        }).then((item) => {
           toast("Chart saved to history", "success");
+          addNotification({
+            type: "ai",
+            title: "Visualization Ready",
+            message: `ChartGPT created '${item?.title}' from your data.`,
+            module: "chartgpt",
+            action: "View Chart",
+            actionHref: `/chartgpt?id=${item?.id}`
+          });
         });
       } else if (config) {
         setConfigError("The AI returned an invalid chart configuration. Please try rephrasing your request.");
@@ -272,5 +283,17 @@ Aug,7800,4900,225,South`;
         <div className="absolute -bottom-1/4 -left-1/4 w-[600px] h-[600px] bg-violet/5 dark:bg-violet/10 rounded-full blur-[150px]" />
       </div>
     </div>
+  );
+}
+
+export default function ChartGPTPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent"></div>
+      </div>
+    }>
+      <ChartGPTContent />
+    </Suspense>
   );
 }

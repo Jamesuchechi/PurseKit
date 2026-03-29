@@ -194,7 +194,7 @@ export default function AnalyticsPage() {
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-2 glass-card p-8 rounded-[32px] border border-border/50"
+            className="lg:col-span-2 glass-card p-6 rounded-[32px] border border-border/50"
           >
             <div className="flex items-center justify-between mb-8">
               <div className="space-y-1">
@@ -211,7 +211,7 @@ export default function AnalyticsPage() {
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass-card p-8 rounded-[32px] border border-border/50"
+            className="glass-card p-6 rounded-[32px] border border-border/50"
           >
             <div className="space-y-1 mb-8">
               <h3 className="text-xl font-bold">Module Breakdown</h3>
@@ -238,7 +238,7 @@ export default function AnalyticsPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="glass-card p-8 rounded-[32px] border border-border/50"
+            className="glass-card p-6 rounded-[32px] border border-border/50"
           >
             <div className="flex items-center justify-between mb-8">
                <div className="space-y-1">

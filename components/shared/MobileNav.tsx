@@ -11,9 +11,11 @@ import {
   History, 
   Sun, 
   Moon,
-  Zap,
-  Sparkles
+  Sparkles,
+  Settings,
+  Bell
 } from "lucide-react";
+import Image from "next/image";
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,6 +27,8 @@ const navItems = [
   { href: "/devlens", label: "DevLens", icon: Brain, color: "text-accent" },
   { href: "/specforge", label: "SpecForge", icon: FileText, color: "text-amber" },
   { href: "/chartgpt", label: "ChartGPT", icon: BarChart3, color: "text-violet" },
+  { href: "/settings", label: "Settings", icon: Settings, color: "text-slate-400" },
+  { href: "/notifications", label: "Notifications", icon: Bell, color: "text-indigo-500" },
 ];
 
 interface MobileNavProps {
@@ -62,8 +66,14 @@ export function MobileNav({ isOpen, onClose, onHistoryClick, onChatClick }: Mobi
             {/* Header */}
             <div className="p-6 border-b border-border/50 flex items-center justify-between">
               <Link href="/" onClick={onClose} className="flex items-center gap-2.5">
-                <div className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg shadow-accent/20">
-                  <Zap className="w-4 h-4 text-white" />
+                <div className="relative w-8 h-8 rounded-lg bg-background flex items-center justify-center shadow-lg shadow-accent/5 overflow-hidden border border-border/50">
+                  <Image 
+                    src="/icon.png" 
+                    alt="PulseKit Logo" 
+                    width={32} 
+                    height={32} 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className="font-display font-bold text-lg tracking-tight">PulseKit</span>
               </Link>
