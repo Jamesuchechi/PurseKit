@@ -13,6 +13,7 @@ import { useAiJSON } from "@/hooks/useAiJSON";
 import { useHistory } from "@/hooks/useHistory";
 import { Button } from "@/components/ui/Button";
 import { chartgptPrompt } from "@/lib/prompts";
+import { ChartConfigEditor } from "@/components/chartgpt/ChartConfigEditor";
 import type { ChartConfig } from "@/types";
 
 export default function ChartGPTPage() {
@@ -22,6 +23,13 @@ export default function ChartGPTPage() {
 
   const [step, setStep] = React.useState<"upload" | "preview" | "visualize">("upload");
   const [configError, setConfigError] = React.useState<string | null>(null);
+  const [editableConfig, setEditableConfig] = React.useState<ChartConfig | null>(null);
+
+  React.useEffect(() => {
+    if (rawChartConfig && isValidChartConfig(rawChartConfig)) {
+      setEditableConfig(rawChartConfig);
+    }
+  }, [rawChartConfig]);
 
   // Sync step with data state
   React.useEffect(() => {
@@ -148,7 +156,7 @@ export default function ChartGPTPage() {
                 </motion.div>
               )}
 
-              {step === "visualize" && rawChartConfig && parsedData && (
+              {step === "visualize" && editableConfig && parsedData && (
                 <motion.div
                   key="visualize-step"
                   initial={{ opacity: 0, scale: 0.98 }}
@@ -167,11 +175,22 @@ export default function ChartGPTPage() {
                     </Button>
                   </div>
 
-                  <ChartRenderer
-                    config={rawChartConfig}
-                    data={parsedData.data}
-                    onReset={() => setStep("preview")}
-                  />
+                  <div className="grid lg:grid-cols-12 gap-8 items-start">
+                    <div className="lg:col-span-3 sticky top-8">
+                      <ChartConfigEditor 
+                        config={editableConfig} 
+                        columns={parsedData.columns} 
+                        onChange={setEditableConfig} 
+                      />
+                    </div>
+                    <div className="lg:col-span-9 min-w-0">
+                      <ChartRenderer
+                        config={editableConfig}
+                        data={parsedData.data}
+                        onReset={() => setStep("preview")}
+                      />
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

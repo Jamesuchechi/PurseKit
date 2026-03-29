@@ -60,10 +60,16 @@ export default function Home() {
       <div className="relative z-10">
         <HeroSection />
         <StatsSection />
-        <FeaturesSection />
-        <ModulesShowcase />
+        <div id="features">
+          <FeaturesSection />
+        </div>
+        <div id="modules">
+          <ModulesShowcase />
+        </div>
         <TestimonialsSection />
-        <FAQSection />
+        <div id="faq">
+          <FAQSection />
+        </div>
         <CTASection />
       </div>
     </div>

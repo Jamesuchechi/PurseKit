@@ -36,12 +36,7 @@ export const metadata: Metadata = {
     follow: true,
   },
 };
-
-import Navbar from "@/components/shared/Navbar";
-import Footer from "@/components/shared/Footer";
-import ScrollProgress from "@/components/shared/ScrollProgress";
 import { LocalSessionProvider } from "@/components/providers/LocalSessionProvider";
-import MainLayout from "@/components/shared/MainLayout";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -50,7 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="antialiased">
+      <body className="antialiased font-inter">
         <LocalSessionProvider>
           <ThemeProvider
             attribute="class"
@@ -58,10 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             enableSystem
             disableTransitionOnChange={false}
           >
-            <ScrollProgress />
-            <Navbar />
-            <MainLayout>{children}</MainLayout>
-            <Footer />
+            {children}
           </ThemeProvider>
         </LocalSessionProvider>
       </body>

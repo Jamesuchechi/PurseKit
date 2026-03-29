@@ -36,11 +36,40 @@ export function useAiStream() {
 
       if (!reader) throw new Error("Response body is not readable");
 
+      let buffer = "";
+
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        setOutput((prev) => prev + chunk);
+        if (done) {
+          // Close any unclosed fenced code block
+          setOutput((final) => {
+            const backtickCount = final.split("```").length - 1;
+            return backtickCount % 2 !== 0 ? final + "\n```" : final;
+          });
+          break;
+        }
+
+        // Accumulate and split on SSE line boundaries
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        // Keep any partial line in the buffer
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const payload = trimmed.slice(5).trim();
+          if (payload === "[DONE]") continue;
+          try {
+            const json = JSON.parse(payload);
+            const delta = json?.choices?.[0]?.delta?.content;
+            if (typeof delta === "string") {
+              setOutput((prev) => prev + delta);
+            }
+          } catch {
+            // Malformed SSE line — skip silently
+          }
+        }
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An error occurred during streaming.";

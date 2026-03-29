@@ -40,6 +40,7 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
+import { aggregateData } from "@/lib/csv-parser";
 
 /**
  * Enhanced Chart Configuration Schema for AI
@@ -148,6 +149,11 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
 
   const colors = config.colors || DEFAULT_COLORS;
   const isDark = theme === "dark";
+  
+  const aggregatedData = React.useMemo(() => {
+    return aggregateData(data, config);
+  }, [data, config]);
+
   const gridStroke = isDark ? "#333" : "#e5e7eb";
   const textStroke = isDark ? "#888" : "#4b5563";
   const tooltipBg = isDark ? "#111" : "#fff";
@@ -248,7 +254,7 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
 
   const renderChart = () => {
     const commonProps = {
-      data,
+      data: aggregatedData,
       margin: { top: 20, right: 30, left: 20, bottom: 20 },
     };
 
@@ -352,7 +358,7 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
         return (
           <PieChart>
             <Pie
-              data={data}
+              data={aggregatedData}
               dataKey={config.dataKeys[0].key}
               nameKey={config.xAxis}
               cx="50%"
@@ -379,13 +385,13 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
             <YAxis type="number" dataKey={config.dataKeys[0].key} name={config.dataKeys[0].label} stroke={textStroke} fontSize={12} />
             <Tooltip cursor={{ strokeDasharray: "3 3" }} contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: "8px" }} />
             <Legend />
-            <Scatter name={config.title} data={data} fill={colors[0]} />
+            <Scatter name={config.title} data={aggregatedData} fill={colors[0]} />
           </ScatterChart>
         );
 
       case "radar":
         return (
-          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={aggregatedData}>
             <PolarGrid stroke={gridStroke} />
             <PolarAngleAxis dataKey={config.xAxis} stroke={textStroke} fontSize={12} />
             <PolarRadiusAxis stroke={gridStroke} fontSize={10} />
@@ -407,7 +413,7 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
       case "treemap":
         return (
           <Treemap
-            data={data}
+            data={aggregatedData}
             dataKey={config.dataKeys[0].key}
             aspectRatio={4 / 3}
             stroke={isDark ? "#111" : "#fff"}
@@ -421,9 +427,9 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
         return (
           <FunnelChart {...commonProps}>
             <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: "8px" }} />
-            <Funnel dataKey={config.dataKeys[0].key} data={data} isAnimationActive>
+            <Funnel dataKey={config.dataKeys[0].key} data={aggregatedData} isAnimationActive>
               <LabelList position="right" fill={textStroke} stroke="none" dataKey={config.xAxis} />
-              {data.map((_, index) => (
+              {aggregatedData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
               ))}
             </Funnel>
@@ -432,7 +438,7 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
 
       case "radialBar":
         return (
-          <RadialBarChart cx="50%" cy="50%" innerRadius="10%" outerRadius="80%" barSize={10} data={data}>
+          <RadialBarChart cx="50%" cy="50%" innerRadius="10%" outerRadius="80%" barSize={10} data={aggregatedData}>
             <RadialBar label={{ position: "insideStart", fill: isDark ? "#fff" : "#111" }} background dataKey={config.dataKeys[0].key} />
             <Legend iconSize={10} layout="vertical" verticalAlign="middle" wrapperStyle={{ right: 0 }} />
             <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: "8px" }} />
@@ -467,7 +473,7 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
             )}
             <Tooltip cursor={{ strokeDasharray: "3 3" }} contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: "8px" }} />
             <Legend />
-            <Scatter name={config.title} data={data} fill={colors[0]} opacity={0.7} />
+            <Scatter name={config.title} data={aggregatedData} fill={colors[0]} opacity={0.7} />
           </ScatterChart>
         );
 
@@ -475,7 +481,7 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
         return (
           <Sankey
             {...commonProps}
-            data={data as unknown as React.ComponentProps<typeof Sankey>["data"]}
+            data={aggregatedData as unknown as React.ComponentProps<typeof Sankey>["data"]}
             nodePadding={50}
             link={{ stroke: isDark ? "#444" : "#ccc" }}
           >
@@ -485,7 +491,7 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
 
       case "heatmap": {
         let maxVal = 0;
-        data.forEach(d => {
+        aggregatedData.forEach(d => {
           config.dataKeys.forEach(dk => {
             const v = Number(d[dk.key]) || 0;
             if (v > maxVal) maxVal = v;
@@ -499,10 +505,10 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
           const innerWidth = width - margin.left - margin.right;
           const innerHeight = height - margin.top - margin.bottom;
           
-          const rowHeight = Math.max(innerHeight / Math.max(data.length, 1), 20);
+          const rowHeight = Math.max(innerHeight / Math.max(aggregatedData.length, 1), 20);
           const colWidth = Math.max(innerWidth / Math.max(config.dataKeys.length, 1), 40);
 
-          const actualHeight = Math.max(height, rowHeight * data.length + margin.top + margin.bottom);
+          const actualHeight = Math.max(height, rowHeight * aggregatedData.length + margin.top + margin.bottom);
 
           return (
             <svg width={width} height={actualHeight} viewBox={`0 0 ${width} ${actualHeight}`} className="overflow-visible">
@@ -523,7 +529,7 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
                 ))}
 
                 {/* Rows (Y-Axis) */}
-                {data.map((row, i) => (
+                {aggregatedData.map((row, i) => (
                   <text
                     key={`row-${i}`}
                     x={-15}
@@ -540,7 +546,7 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
                 ))}
 
                 {/* Cells */}
-                {data.map((row, i) =>
+                {aggregatedData.map((row, i) =>
                   config.dataKeys.map((dk, j) => {
                     const val = Number(row[dk.key]) || 0;
                     const opacity = maxVal > 0 ? (val / maxVal) * 0.8 + 0.2 : 0;
@@ -645,7 +651,7 @@ export function ChartRenderer({ config, data, onReset, isLoading }: ChartRendere
                 {config.type}
               </Badge>
               <div className="w-1 h-1 rounded-full bg-muted" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted">{data.length} datapoints</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted">{aggregatedData.length} datapoints {data.length > 1000 && `(Aggregated from ${data.length})`}</span>
             </div>
             <h2 className="text-3xl font-display font-black text-foreground tracking-tight">
               {config.title}

@@ -6,12 +6,7 @@ import { History, X, Clock, FileText, BarChart3, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 
-interface HistoryItem {
-  id: string;
-  module: "devlens" | "specforge" | "chartgpt";
-  title: string;
-  timestamp: string;
-}
+import { type HistoryItem, type Module } from "@/types";
 
 interface HistorySidebarProps {
   isOpen: boolean;
@@ -20,13 +15,13 @@ interface HistorySidebarProps {
   onItemClick?: (item: HistoryItem) => void;
 }
 
-const moduleIcons = {
+const moduleIcons: Record<Module, React.ElementType> = {
   devlens: Brain,
   specforge: FileText,
   chartgpt: BarChart3,
 };
 
-const moduleColors = {
+const moduleColors: Record<Module, string> = {
   devlens: "text-accent",
   specforge: "text-amber",
   chartgpt: "text-violet",

@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
+import type { ChartConfig } from "@/types";
 
 /**
  * Robust CSV and JSON parsing utility using PapaParse.
@@ -94,4 +95,29 @@ export function inferColumnTypes(data: Record<string, unknown>[], columns: strin
   });
 
   return types;
+}
+
+export function aggregateData(data: Record<string, unknown>[], config: ChartConfig, maxLimit: number = 1000): Record<string, unknown>[] {
+  if (data.length <= maxLimit) return data;
+  
+  const grouped = new Map<string, Record<string, number | string>>();
+  
+  data.forEach((row) => {
+    const xVal = String(row[config.xAxis] || "Unknown");
+    if (!grouped.has(xVal)) {
+      const initial: Record<string, number | string> = { [config.xAxis]: xVal };
+      config.dataKeys.forEach(dk => { initial[dk.key] = 0; });
+      grouped.set(xVal, initial);
+    }
+    const target = grouped.get(xVal)!;
+    
+    config.dataKeys.forEach(dk => {
+      const val = Number(row[dk.key]);
+      if (!isNaN(val)) {
+        target[dk.key] = (target[dk.key] as number) + val;
+      }
+    });
+  });
+  
+  return Array.from(grouped.values()).slice(0, maxLimit);
 }

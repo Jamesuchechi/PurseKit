@@ -173,47 +173,47 @@ Each phase has a clear goal, deliverables, and definition of done.
 > **Goal:** Paste any code → get structured AI analysis with bugs, complexity, refactors, and explanation — streamed in real time.
 
 ### UI — Input
-- [ ] `CodeInput.tsx` — large textarea with monospace font, line numbers, tab-key support
-- [ ] Language auto-detect badge (shown as user types, updated on change)
-- [ ] `LanguageSelector.tsx` — dropdown: Auto, JavaScript, TypeScript, Python, Go, Rust, SQL, Bash, Java, C++, Other
-- [ ] Character/line count display
-- [ ] Clear code button
-- [ ] Sample code button (loads an example snippet for demo)
-- [ ] Analyze button with loading state
+- [x] `CodeInput.tsx` — large textarea with monospace font, line numbers, tab-key support
+- [x] Language auto-detect badge (shown as user types, updated on change)
+- [x] `LanguageSelector.tsx` — dropdown: Auto, JavaScript, TypeScript, Python, Go, Rust, SQL, Bash, Java, C++, Other
+- [x] Character/line count display
+- [x] Clear code button
+- [x] Sample code button (loads an example snippet for demo)
+- [x] Analyze button with loading state
 
 ### UI — Output
-- [ ] `AnalysisOutput.tsx` — renders structured AI result
-- [ ] **Summary section** — one-paragraph overview with language badge
-- [ ] **Bugs & Issues section** — list with severity badges (`low` / `medium` / `high`), line references
-- [ ] **Complexity section** — score gauge (1–10), rating badge, notes
-- [ ] **Refactor Suggestions section** — before/after code blocks side by side
-- [ ] **Security Flags section** — flagged issues with category tags (SQLi, XSS, etc.)
-- [ ] **Explanation section** — plain-English walkthrough, paragraph format
-- [ ] All sections collapsible with animated chevron
-- [ ] Streaming: sections appear progressively as Claude responds
-- [ ] `Skeleton.tsx` shown during stream start
-- [ ] Copy-to-clipboard on each code block
-- [ ] Copy full analysis as Markdown
+- [x] `AnalysisOutput.tsx` — renders structured AI result
+- [x] **Summary section** — one-paragraph overview with language badge
+- [x] **Bugs & Issues section** — list with severity badges (`low` / `medium` / `high`), line references
+- [x] **Complexity section** — score gauge (1–10), rating badge, notes
+- [x] **Refactor Suggestions section** — before/after code blocks side by side
+- [x] **Security Flags section** — flagged issues with category tags (SQLi, XSS, etc.)
+- [x] **Explanation section** — plain-English walkthrough, paragraph format
+- [x] All sections collapsible with animated chevron
+- [x] Streaming: sections appear progressively as Claude responds
+- [x] `Skeleton.tsx` shown during stream start
+- [x] Copy-to-clipboard on each code block
+- [x] Copy full analysis as Markdown
 
 ### AI Integration
-- [ ] Wire `Any Ai we are using` into DevLens page
-- [ ] `devlensPrompt(code, language)` — system prompt defines exact Markdown section format
-- [ ] Stream tokens into output state; parse sections client-side as stream completes
-- [ ] Handle: empty input, input too long (>50k chars), API error, timeout
+- [x] Wire `Any Ai we are using` into DevLens page
+- [x] `devlensPrompt(code, language)` — system prompt defines exact Markdown section format
+- [x] Stream tokens into output state; parse sections client-side as stream completes
+- [x] Handle: empty input, input too long (>50k chars), API error, timeout
 
 ### Language Support Matrix
-- [ ] JavaScript / TypeScript — JSX aware
-- [ ] Python — indentation, type hints, common patterns
-- [ ] Go — idiomatic checks
-- [ ] Rust — ownership hints
-- [ ] SQL — injection risks, N+1 patterns
-- [ ] Bash — quoting issues, safety flags
-- [ ] Auto-detect — default fallback
+- [x] JavaScript / TypeScript — JSX aware
+- [x] Python — indentation, type hints, common patterns
+- [x] Go — idiomatic checks
+- [x] Rust — ownership hints
+- [x] SQL — injection risks, N+1 patterns
+- [x] Bash — quoting issues, safety flags
+- [x] Auto-detect — default fallback
 
 ### Export & History
-- [ ] Export analysis as `.md` file download
-- [ ] Save to history with code snippet preview (first 3 lines)
-- [ ] Load from history sidebar
+- [x] Export analysis as `.md` file download
+- [x] Save to history with code snippet preview (first 3 lines)
+- [x] Load from history sidebar
 
 **✅ Phase 3 Done When:** Paste a buggy Python function → analysis streams in → bugs listed with severity → refactor suggestion shown with before/after → export as Markdown works.
 
@@ -223,52 +223,52 @@ Each phase has a clear goal, deliverables, and definition of done.
 > **Goal:** Describe a feature in plain text → get a full, export-ready PRD with user stories, acceptance criteria, schema, and API routes.
 
 ### UI — Input
-- [ ] `FeatureInput.tsx` — large textarea with word count, placeholder with example prompts
-- [ ] Audience selector: `Technical Engineer` | `Product Manager` | `Executive / Stakeholder`
-- [ ] Scope selector: `Small feature` | `Medium feature` | `Large epic`
-- [ ] Optional context fields (collapsible): tech stack, existing system description, constraints
-- [ ] Generate button with loading state
-- [ ] Example prompt chips: "User auth with OAuth", "CSV export feature", "Real-time notifications"
+- [x] `FeatureInput.tsx` — large textarea with word count, placeholder with example prompts
+- [x] Audience selector: `Technical Engineer` | `Product Manager` | `Executive / Stakeholder`
+- [x] Scope selector: `Small feature` | `Medium feature` | `Large epic`
+- [x] Optional context fields (collapsible): tech stack, existing system description, constraints
+- [x] Generate button with loading state
+- [x] Example prompt chips: "User auth with OAuth", "CSV export feature", "Real-time notifications"
 
 ### UI — Output
-- [ ] `PRDOutput.tsx` — full markdown-rendered PRD
-- [ ] Section navigation sidebar (sticky, links to each PRD section)
-- [ ] Raw Markdown / Preview toggle
-- [ ] `react-markdown` with `rehype-sanitize` and custom component renderers
-- [ ] Custom styles for PRD headings, tables, code blocks, blockquotes
+- [x] `PRDOutput.tsx` — full markdown-rendered PRD
+- [x] Section navigation sidebar (sticky, links to each PRD section)
+- [x] Raw Markdown / Preview toggle
+- [x] `react-markdown` with `rehype-sanitize` and custom component renderers
+- [x] Custom styles for PRD headings, tables, code blocks, blockquotes
 
 ### PRD Sections (AI-generated)
-- [ ] **Overview** — feature summary paragraph
-- [ ] **Problem Statement** — what problem this solves and for whom
-- [ ] **Goals & Non-Goals** — explicit in/out of scope
-- [ ] **User Stories** — formatted "As a [role], I want [x], so that [y]"
-- [ ] **Acceptance Criteria** — testable, specific, one per story
-- [ ] **Edge Cases & Error States** — what could go wrong
-- [ ] **Data Schema** — models, fields, types, constraints in table format
-- [ ] **API Endpoints** — method, path, description, request/response shape
-- [ ] **Open Questions** — unresolved decisions flagged for the team
-- [ ] **Dependencies** — systems or teams this feature depends on
+- [x] **Overview** — feature summary paragraph
+- [x] **Problem Statement** — what problem this solves and for whom
+- [x] **Goals & Non-Goals** — explicit in/out of scope
+- [x] **User Stories** — formatted "As a [role], I want [x], so that [y]"
+- [x] **Acceptance Criteria** — testable, specific, one per story
+- [x] **Edge Cases & Error States** — what could go wrong
+- [x] **Data Schema** — models, fields, types, constraints in table format
+- [x] **API Endpoints** — method, path, description, request/response shape
+- [x] **Open Questions** — unresolved decisions flagged for the team
+- [x] **Dependencies** — systems or teams this feature depends on
 
 ### AI Integration
-- [ ] Wire `useClaudeStream` into SpecForge page
-- [ ] `specforgePrompt(description, audience, scope, context)` — system prompt enforces PRD structure
-- [ ] Stream Markdown tokens directly into preview pane
-- [ ] Handle: empty input, ambiguous description (ask for clarification), API error
+- [x] Wire `Any Ai we are using` into SpecForge page
+- [x] `specforgePrompt(description, audience, scope, context)` — system prompt enforces PRD structure
+- [x] Stream Markdown tokens directly into preview pane
+- [x] Handle: empty input, ambiguous description (ask for clarification), API error
 
 ### Export & History
-- [ ] Copy full PRD to clipboard as Markdown
-- [ ] Download as `.md` file
-- [ ] Download as `.txt` file (plain text, no markdown)
-- [ ] Save to history with feature title as preview label
-- [ ] Load from history sidebar
-- [ ] Regenerate — re-run same input with new output
+- [x] Copy full PRD to clipboard as Markdown
+- [x] Download as `.md` file
+- [x] Download as `.txt` file (plain text, no markdown)
+- [x] Save to history with feature title as preview label
+- [x] Load from history sidebar
+- [x] Regenerate — re-run same input with new output
 
 **✅ Phase 4 Done When:** Type "Build a CSV export feature for a SaaS dashboard" → full PRD streams in with all sections → export as `.md` downloads correctly.
 
 ---
 
 ## Phase 5 — History Vault
-> **Goal:** Every result from every module is saved, searchable, and retrievable — persisted in PostgreSQL.
+> **Goal:** Every result from every module is saved, searchable, and retrievable — persisted in LocalStorage.
 
 ### Data Model
 - [x] `HistoryItem<T>` interface: `id`, `module`, `createdAt`, `title`, `input`, `result`

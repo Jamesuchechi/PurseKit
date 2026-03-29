@@ -2,22 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, FileText, BarChart3, Zap, Home, Moon, Sun, Menu, X, Sparkles } from "lucide-react";
+import { Brain, FileText, Zap, Home, Moon, Sun, Menu, X, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocalSession } from "@/components/providers/LocalSessionProvider";
-import { User } from "lucide-react";
 
 const nav = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/devlens", label: "DevLens", icon: Brain, color: "accent", activeGradient: "from-accent/20 to-accent/5" },
-  { href: "/specforge", label: "SpecForge", icon: FileText, color: "amber", activeGradient: "from-amber/20 to-amber/5" },
-  { href: "/chartgpt", label: "ChartGPT", icon: BarChart3, color: "violet", activeGradient: "from-violet/20 to-violet/5" },
+  { href: "/#features", label: "Features", icon: Zap },
+  { href: "/#modules", label: "Modules", icon: Brain },
+  { href: "/#faq", label: "FAQ", icon: FileText },
 ];
 
 export default function Navbar() {
-  const { user } = useLocalSession();
   const path = usePathname();
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -80,45 +77,31 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-2">
-              {nav
-                .filter((item) => {
-                  const isPublicOrAuthPage = path === "/" || path.startsWith("/auth/");
-                  const isProtectedRoute = ["/devlens", "/specforge", "/chartgpt"].includes(item.href);
-                  return !(isPublicOrAuthPage && isProtectedRoute);
-                })
-                .map((item) => {
-                  const Icon = item.icon;
-                  const isActive = path === item.href;
-                  
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`
-                        relative group flex items-center gap-2 px-4 py-2 rounded-xl
-                        text-sm font-medium transition-all duration-300
-                        hover:scale-105 active:scale-95
-                        ${isActive 
-                          ? `bg-gradient-to-r ${item.activeGradient} border border-${item.color}/30 text-${item.color}` 
-                          : "text-muted hover:text-foreground hover:bg-muted/50"
-                        }
-                      `}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeNav"
-                          className={`absolute inset-0 bg-gradient-to-r ${item.activeGradient} border border-${item.color}/30 rounded-xl`}
-                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                        />
-                      )}
-                      <Icon className="w-4 h-4 relative z-10" />
-                      <span className="relative z-10">{item.label}</span>
-                    </Link>
-                  );
-                })}
+              {nav.map((item) => {
+                const Icon = item.icon;
+                const isActive = path === item.href || (path === "/" && item.href.startsWith("/#"));
+                
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`
+                      relative group flex items-center gap-2 px-4 py-2 rounded-xl
+                      text-sm font-medium transition-all duration-300
+                      hover:scale-105 active:scale-95
+                      ${isActive 
+                        ? "bg-muted text-accent border border-accent/20" 
+                        : "text-muted hover:text-foreground hover:bg-muted/50"
+                      }
+                    `}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    <Icon className="w-4 h-4 relative z-10" />
+                    <span className="relative z-10">{item.label}</span>
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Right Actions */}
@@ -154,21 +137,14 @@ export default function Navbar() {
                 </AnimatePresence>
               </button>
 
-              {/* Try it Button or User Profile */}
-              {user ? (
-                <div className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border/50 bg-background/50 text-sm font-medium text-foreground">
-                  <User className="w-4 h-4 text-accent" />
-                  {user.name}
-                </div>
-              ) : (
-                <Link
-                  href="/dashboard"
-                  className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-white text-sm font-bold shadow-lg shadow-accent/20 hover:shadow-accent/30 transition-all hover:scale-105 active:scale-95"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Try it
-                </Link>
-              )}
+              {/* Try it Button */}
+              <Link
+                href="/dashboard"
+                className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-white text-sm font-bold shadow-lg shadow-accent/20 hover:shadow-accent/30 transition-all hover:scale-105 active:scale-95"
+              >
+                <Sparkles className="w-4 h-4" />
+                Try it
+              </Link>
 
               {/* Mobile Menu Toggle */}
               <button
@@ -240,36 +216,30 @@ export default function Navbar() {
 
                 {/* Navigation Links */}
                 <nav className="space-y-2" role="navigation">
-                  {nav
-                    .filter((item) => {
-                      const isPublicOrAuthPage = path === "/" || path.startsWith("/auth/");
-                      const isProtectedRoute = ["/devlens", "/specforge", "/chartgpt"].includes(item.href);
-                      return !(isPublicOrAuthPage && isProtectedRoute);
-                    })
-                    .map((item) => {
-                      const Icon = item.icon;
-                      const isActive = path === item.href;
-                      
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setMobileOpen(false)}
-                          className={`
-                            flex items-center gap-3 px-4 py-3 rounded-xl
-                            text-base font-medium transition-all
-                            ${isActive 
-                              ? `bg-gradient-to-r ${item.activeGradient} border border-${item.color}/30 text-${item.color}` 
-                              : "hover:bg-muted/50"
-                            }
-                          `}
-                          aria-current={isActive ? "page" : undefined}
-                        >
-                          <Icon className="w-5 h-5" />
-                          {item.label}
-                        </Link>
-                      );
-                    })}
+                  {nav.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = path === item.href || (path === "/" && item.href.startsWith("/#"));
+                    
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileOpen(false)}
+                        className={`
+                          flex items-center gap-3 px-4 py-3 rounded-xl
+                          text-base font-medium transition-all
+                          ${isActive 
+                            ? "bg-muted text-accent border border-accent/20" 
+                            : "hover:bg-muted/50"
+                          }
+                        `}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <Icon className="w-5 h-5" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
                 </nav>
 
                 {/* Divider */}
