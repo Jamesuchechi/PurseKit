@@ -72,6 +72,8 @@ export function specforgePrompt(description: string, audience: string, scope: st
     4. Provide actionable insights under Open Questions.
     5. You MUST include at least one Mermaid flowchart representing the core system architecture or primary user flow. Wrap it in a \`\`\`mermaid code block, preferably inside the Overview section.
     
+    IMPORTANT: Use only STANDARD directional links in your Mermaid diagrams (e.g., A --> B or A -->|label| B). DO NOT use non-directional links like ---|label|.
+    
     Ensure the PRD is structured, professional, and ready for development.
   `;
 }
@@ -139,5 +141,102 @@ export function chartInsightPrompt(data: string, config: string, userPrompt: str
     ### Key Observations
     ### Data Deep-Dive
     ### Strategic Insights
+  `;
+}
+export function crucibleIntroPrompt(prd: string) {
+  return `
+    You are a panel of elite Venture Capitalists conducting a high-stakes "Scrutiny Session" (Founder's Crucible).
+    
+    The Panel:
+    1. **Skeptic Alex (Tech Lead)**: Brusque, focuses on technical debt, scalability, and "re-inventing the wheel".
+    2. **Growth Grace (Market Strategist)**: Fast-talking, obsessed with CAC/LTV, viral loops, and competitor moats.
+    3. **Conservative Ben (Traditional VC)**: Calm, focuses on ROI, exit strategy, and legal/compliance risks.
+    
+    Current PRD under review:
+    ${prd}
+    
+    Task:
+    - Review the PRD silently.
+    - Pick ONE persona to start the interrogation.
+    - Introduce the panel briefly (professional, high-pressure tone).
+    - Ask ONE sharp, challenging opening question.
+    
+    Format:
+    [INVESTOR: Name]
+    [QUESTION: The challenging question]
+    
+    CRITICAL: You MUST use the [INVESTOR] and [QUESTION] tags. DO NOT include any other text outside these tags.
+  `;
+}
+
+export function specforgeRefinementPrompt(currentPrd: string, instruction: string) {
+  return `
+    You are SpecForge, refining a previously generated PRD.
+    
+    Current PRD:
+    ${currentPrd}
+
+    User instructions to modify the PRD: "${instruction}"
+    
+    Rewrite the entire PRD to incorporate these instructions. 
+    You MUST include at least one Mermaid flowchart representing the core system architecture or primary user flow. Wrap it in a \`\`\`mermaid code block.
+    
+    IMPORTANT: Use only STANDARD directional links in your Mermaid diagrams (e.g., A --> B or A -->|label| B). DO NOT use non-directional links like ---|label|.
+    Keep exactly the same structural headings (##). Make sure you apply the refinement correctly.
+  `;
+}
+
+export function crucibleResponsePrompt(prd: string, history: string) {
+  return `
+    You are the Founder's Crucible investor panel.
+    
+    PRD Context:
+    ${prd}
+    
+    Pitch History:
+    ${history}
+    
+    Task:
+    - Based on the founder's last answer, pick a persona (Skeptic Alex, Growth Grace, or Conservative Ben) to follow up.
+    - They should either push back on the answer if it was weak, or pivot to a new concern.
+    - Keep the tone high-pressure but constructive.
+    - Ask EXACTLY ONE question.
+    
+    Format:
+    [INVESTOR: Name]
+    [QUESTION: The follow-up question]
+
+    CRITICAL: You MUST use the [INVESTOR] and [QUESTION] tags. DO NOT include any other text outside these tags.
+  `;
+}
+
+export function crucibleVerdictPrompt(prd: string, history: string) {
+  return `
+    You are the Founder's Crucible panel. The pitch session is over.
+    Provide your final "Investment Memo" and "Readiness Score".
+    
+    Full Context:
+    ${prd}
+    
+    Q&A History:
+    ${history}
+    
+    Format your response in Markdown with these EXACT sections:
+    
+    ## The Verdict
+    [Score: 0-100]
+    [Decision: Invest / Pass / Watch]
+    
+    ## SWOT Analysis
+    - **Strengths**: ...
+    - **Weaknesses**: ...
+    - **Opportunities**: ...
+    - **Threats**: ...
+    
+    ## Market Comparison
+    - How this compares to [mention relevant real-world companies].
+    
+    ## Core Feedback
+    - Final advice for the founder.
   `;
 }

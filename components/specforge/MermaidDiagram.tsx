@@ -25,22 +25,43 @@ export function MermaidDiagram({ chart, isStreaming }: MermaidDiagramProps) {
     
     // Minimal debounce for the render loop so it doesn't choke the stream
     const timeoutId = setTimeout(async () => {
+      if (!chart.trim()) return;
+
       try {
         const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
-        // Try parsing first, if it fails it throws. 
-        // We run render directly.
-        const { svg } = await mermaid.render(id, chart);
+        
+        // Auto-repair common AI mistakes
+        let repairedChart = chart
+          .replace(/\|>/g, "|")        
+          .replace(/---\|/g, "-->|")
+          .replace(/--\|/g, "-->|")
+          .trim();
+
+        // Ensure chart has a header
+        if (!repairedChart.startsWith("graph ") && !repairedChart.startsWith("flowchart ")) {
+          repairedChart = `graph TD\n${repairedChart}`;
+        }
+
+        // Try parsing first
+        try {
+          await mermaid.parse(repairedChart, { suppressErrors: true });
+        } catch (parseError) {
+           console.warn("Mermaid Parse Error:", parseError);
+           if (!isStreaming) throw parseError; // Only throw if we are done
+        }
+
+        const { svg } = await mermaid.render(id, repairedChart);
         
         if (isMounted) {
           setSvgContent(svg);
           setHasError(false);
         }
       } catch (e) {
-        void e;
+        console.error("Mermaid Render Failure:", e);
         // If it throws, it's either incomplete (streaming) or broken syntax.
-        if (isMounted) setHasError(true);
+        if (isMounted && !isStreaming) setHasError(true);
       }
-    }, isStreaming ? 300 : 0);
+    }, isStreaming ? 400 : 0);
 
     return () => {
       isMounted = false;

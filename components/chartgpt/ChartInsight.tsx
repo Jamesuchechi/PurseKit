@@ -11,12 +11,7 @@ interface ChartInsightProps {
 }
 
 export function ChartInsight({ insight, isLoading }: ChartInsightProps) {
-  const [isExpanded, setIsExpanded] = React.useState(true);
-
-  // Automatically expand when loading starts
-  React.useEffect(() => {
-    if (isLoading) setIsExpanded(true);
-  }, [isLoading]);
+  const [isExpanded, setIsExpanded] = React.useState(false);
 
   if (!insight && !isLoading) return null;
 
