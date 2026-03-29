@@ -37,6 +37,7 @@ export const metadata: Metadata = {
   },
 };
 import { LocalSessionProvider } from "@/components/providers/LocalSessionProvider";
+import { ToastProvider } from "@/components/ui/Toast";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,16 +47,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
     >
       <body className="antialiased font-inter">
-        <LocalSessionProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange={false}
-          >
-            {children}
-          </ThemeProvider>
-        </LocalSessionProvider>
+        <ToastProvider>
+          <LocalSessionProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem
+              disableTransitionOnChange={false}
+            >
+              {children}
+            </ThemeProvider>
+          </LocalSessionProvider>
+        </ToastProvider>
       </body>
     </html>
   );

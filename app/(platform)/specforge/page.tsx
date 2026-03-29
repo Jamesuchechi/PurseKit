@@ -12,6 +12,8 @@ import { specforgePrompt } from "@/lib/prompts";
 import { useHistory } from "@/hooks/useHistory";
 import { useDebounce } from "@/hooks/useDebounce";
 import { truncate } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
+import { useToast } from "@/components/ui/Toast";
 
 type Step = "input" | "generating" | "result";
 
@@ -27,12 +29,36 @@ export default function SpecForgePage() {
   // Refinement State
   const [refinementQuery, setRefinementQuery] = React.useState("");
   
-  const { output, isLoading, error, run, reset } = useAiStream();
-  const { save } = useHistory("specforge");
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const { output, isLoading, error, run, reset, setOutput } = useAiStream();
+  const { items, save } = useHistory("specforge");
   const debouncedDesc = useDebounce(description, 1000);
   const debouncedContext = useDebounce(context, 1000);
   const [isReady, setIsReady] = React.useState(false);
   const [saveInitiated, setSaveInitiated] = React.useState(false);
+
+  // Load from search params (History)
+  React.useEffect(() => {
+    const id = searchParams.get("id");
+    if (id && isReady) {
+      const item = items.find((i) => i.id === id);
+      if (item) {
+        try {
+          const input = JSON.parse(item.input);
+          setDescription(input.description || "");
+          setAudience(input.audience || "Technical Engineer");
+          setScope(input.scope || "Medium feature");
+          setContext(input.context || "");
+        } catch {
+          setDescription(item.input);
+        }
+        setOutput(item.result as string);
+        setStep("result");
+        setSaveInitiated(true);
+      }
+    }
+  }, [searchParams, items, isReady, setOutput]);
 
   // Hydrate from localStorage draft
   React.useEffect(() => {
@@ -70,13 +96,15 @@ export default function SpecForgePage() {
       setSaveInitiated(true);
       setTimeout(() => {
         save({
-          title: truncate(description.split("\\n")[0]?.trim() || "PRD", 60),
+          title: truncate(description.split("\n")[0]?.trim() || "PRD", 60),
           input: JSON.stringify({ description, audience, scope, context }),
           result: output,
+        }).then(() => {
+          toast("PRD saved to history", "success");
         });
       }, 500);
     }
-  }, [isLoading, output, error, saveInitiated, description, audience, scope, context, save, step]);
+  }, [isLoading, output, error, saveInitiated, description, audience, scope, context, save, step, toast]);
 
   const handleGenerate = () => {
     if (!description.trim()) return;

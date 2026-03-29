@@ -14,16 +14,36 @@ import { useHistory } from "@/hooks/useHistory";
 import { Button } from "@/components/ui/Button";
 import { chartgptPrompt } from "@/lib/prompts";
 import { ChartConfigEditor } from "@/components/chartgpt/ChartConfigEditor";
+import { useSearchParams } from "next/navigation";
+import { useToast } from "@/components/ui/Toast";
 import type { ChartConfig } from "@/types";
+import type { ParsedData } from "@/lib/csv-parser";
 
 export default function ChartGPTPage() {
-  const { file, parsedData, error: uploadError, isLoading: isUploading, upload, reset: resetFile } = useFileUpload();
-  const { data: rawChartConfig, isLoading: isAnalyzing, error: aiError, run: runAi, reset: resetAi } = useAiJSON<ChartConfig>();
-  const history = useHistory<ChartConfig>("chartgpt");
+  const { file, parsedData, error: uploadError, isLoading: isUploading, upload, reset: resetFile, setParsedData } = useFileUpload();
+  const { data: rawChartConfig, isLoading: isAnalyzing, error: aiError, run: runAi, reset: resetAi, setData: setAiData } = useAiJSON<ChartConfig>();
+  
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const history = useHistory<{ config: ChartConfig; data: ParsedData }>("chartgpt");
 
   const [step, setStep] = React.useState<"upload" | "preview" | "visualize">("upload");
   const [configError, setConfigError] = React.useState<string | null>(null);
   const [editableConfig, setEditableConfig] = React.useState<ChartConfig | null>(null);
+
+  // Load from search params (History)
+  React.useEffect(() => {
+    const id = searchParams.get("id");
+    if (id && history.items.length > 0) {
+      const item = history.items.find((i) => i.id === id);
+      if (item && item.result) {
+        setAiData(item.result.config);
+        setEditableConfig(item.result.config);
+        setParsedData(item.result.data);
+        setStep("visualize");
+      }
+    }
+  }, [searchParams, history.items, setAiData, setParsedData]);
 
   React.useEffect(() => {
     if (rawChartConfig && isValidChartConfig(rawChartConfig)) {
@@ -68,7 +88,9 @@ export default function ChartGPTPage() {
     history.save({
       title: config.title || prompt,
       input: prompt,
-      result: config,
+      result: { config, data: parsedData! },
+    }).then(() => {
+      toast("Chart saved to history", "success");
     });
   };
 

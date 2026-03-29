@@ -278,22 +278,22 @@ Each phase has a clear goal, deliverables, and definition of done.
 
 
 ### `HistorySidebar.tsx`
-- [ ] Slide-in drawer from right, triggered by history button in Navbar
-- [ ] Tabbed by module: All | DevLens | SpecForge | ChartGPT
-- [ ] Each item shows: module badge, title, relative timestamp ("2h ago")
-- [ ] Click item → load result into the relevant module
-- [ ] Hover item → show delete (×) button
-- [ ] Empty state illustration when no history
-- [ ] Search/filter bar — searches titles and input text
-- [ ] "Clear all" button with confirmation modal
-- [ ] Export all history as `.json` file
+- [x] Slide-in drawer from right, triggered by history button in Sidebar
+- [x] Tabbed by module: All | DevLens | SpecForge | ChartGPT
+- [x] Each item shows: module badge, title, relative timestamp ("2h ago")
+- [x] Click item → load result into the relevant module
+- [x] Hover item → show delete (×) button
+- [x] Empty state illustration when no history
+- [x] Search/filter bar — searches titles and input text
+- [x] "Clear all" button with confirmation modal
+- [x] Export all history as `.json` file
 
 ### Per-Module Integration
-- [ ] DevLens: save on successful analysis completion
-- [ ] SpecForge: save on successful PRD generation completion
-- [ ] ChartGPT: save on successful chart render
-- [ ] Each module shows "Saved ✓" toast on save
-- [ ] Each module has "Load from history" shortcut button
+- [x] DevLens: save on successful analysis completion
+- [x] SpecForge: save on successful PRD generation completion
+- [x] ChartGPT: save on successful chart render
+- [x] Each module shows "Saved ✓" toast on save
+- [x] Each module has "Load from history" shortcut button
 
 **✅ Phase 5 Done When:** Complete a DevLens analysis → close browser → reopen → result appears in history sidebar → clicking it reloads the analysis.
 

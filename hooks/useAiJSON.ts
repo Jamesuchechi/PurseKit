@@ -46,5 +46,5 @@ export function useAiJSON<T = unknown>() {
     setError(null);
   };
 
-  return { data, isLoading, error, run, reset };
+  return { data, isLoading, error, run, reset, setData };
 }

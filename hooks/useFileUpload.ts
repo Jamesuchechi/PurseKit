@@ -95,5 +95,5 @@ export function useFileUpload() {
     setError(null);
   };
 
-  return { file, parsedData, error, isLoading, upload, reset };
+  return { file, parsedData, error, isLoading, upload, reset, setParsedData };
 }

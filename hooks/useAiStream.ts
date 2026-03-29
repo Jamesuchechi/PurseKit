@@ -85,5 +85,5 @@ export function useAiStream() {
     setError(null);
   };
 
-  return { output, isLoading, error, run, reset };
+  return { output, isLoading, error, run, reset, setOutput };
 }

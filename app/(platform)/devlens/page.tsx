@@ -12,6 +12,8 @@ import { devlensPrompt } from "@/lib/prompts";
 import { useHistory } from "@/hooks/useHistory";
 import { useDebounce } from "@/hooks/useDebounce";
 import { downloadFile, truncate } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
+import { useSearchParams } from "next/navigation";
 
 const SAMPLE_CODE = `function processData(input) {
   if (input == null) return false;
@@ -31,39 +33,57 @@ export default function DevLensPage() {
   const [language, setLanguage] = React.useState("auto");
   const [errorLines, setErrorLines] = React.useState<number[]>([]);
   
-  const { output, isLoading, error, run, reset } = useAiStream();
-  const { save } = useHistory("devlens");
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const { output, isLoading, error, run, reset, setOutput } = useAiStream();
+  const { items, save } = useHistory("devlens");
   const [saveInitiated, setSaveInitiated] = React.useState(false);
   const debouncedCode = useDebounce(code, 1000);
   const [isReady, setIsReady] = React.useState(false);
 
+  // Load from search params (History)
   React.useEffect(() => {
-    try {
-      const draft = window.localStorage.getItem("devlens_draft");
-      if (draft) setCode(draft);
-    } catch {}
-    setIsReady(true);
-  }, []);
+    const id = searchParams.get("id");
+    if (id && isReady) {
+      const item = items.find((i) => i.id === id);
+      if (item) {
+        setCode(item.input);
+        setOutput(item.result as string);
+        setSaveInitiated(true); // Don't re-save something we just loaded
+      }
+    }
+  }, [searchParams, items, isReady, setOutput]);
 
   React.useEffect(() => {
-    if (isReady && debouncedCode !== undefined) {
+    try {
+      if (!searchParams.get("id")) {
+        const draft = window.localStorage.getItem("devlens_draft");
+        if (draft) setCode(draft);
+      }
+    } catch {}
+    setIsReady(true);
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    if (isReady && debouncedCode !== undefined && !searchParams.get("id")) {
       window.localStorage.setItem("devlens_draft", debouncedCode);
     }
-  }, [debouncedCode, isReady]);
+  }, [debouncedCode, isReady, searchParams]);
 
   React.useEffect(() => {
     if (!isLoading && output.length > 0 && !saveInitiated && !error) {
       setSaveInitiated(true);
       setTimeout(() => {
         save({
-          // Fix for string matching HistoryItem title requirement
-          title: truncate(code.split("\\n")[0]?.trim() || "Analysis", 60),
+          title: truncate(code.split("\n")[0]?.trim() || "Analysis", 60),
           input: code,
           result: output,
+        }).then(() => {
+          toast("Analysis saved to history", "success");
         });
       }, 500);
     }
-  }, [isLoading, output, error, saveInitiated, code, save]);
+  }, [isLoading, output, error, saveInitiated, code, save, toast]);
 
   const handleAnalyze = () => {
     if (!code.trim()) return;
