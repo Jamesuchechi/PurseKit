@@ -12,12 +12,14 @@ import { useFileUpload } from "@/hooks/useFileUpload";
 import { useAiJSON } from "@/hooks/useAiJSON";
 import { useHistory } from "@/hooks/useHistory";
 import { Button } from "@/components/ui/Button";
-import { chartgptPrompt } from "@/lib/prompts";
 import { ChartConfigEditor } from "@/components/chartgpt/ChartConfigEditor";
+import { ChartInsight } from "@/components/chartgpt/ChartInsight";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { useModuleContext } from "@/context/ModuleContext";
 import { useGlobalActions } from "@/hooks/useGlobalActions";
+import { useAiStream } from "@/hooks/useAiStream";
+import { chartgptPrompt, chartInsightPrompt } from "@/lib/prompts";
 import type { ChartConfig } from "@/types";
 import { type ParsedData, inferColumnTypes } from "@/lib/csv-parser";
 import { Suspense } from "react";
@@ -29,14 +31,18 @@ function ChartGPTContent() {
   
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const history = useHistory<{ config: ChartConfig; data: ParsedData }>("chartgpt");
+  const history = useHistory<{ config: ChartConfig; data: ParsedData; insight?: string }>("chartgpt");
   const { addNotification } = useNotifications();
   const { updateContext } = useModuleContext();
+
+  const { output: insight, isLoading: isInsightLoading, run: runInsight, reset: resetInsight, setOutput: setInsight } = useAiStream();
 
   const [step, setStep] = React.useState<"upload" | "preview" | "visualize">("upload");
   const [configError, setConfigError] = React.useState<string | null>(null);
   const [editableConfig, setEditableConfig] = React.useState<ChartConfig | null>(null);
   const [prompt, setPrompt] = React.useState("");
+
+  const lastAnalyzedConfigRef = React.useRef<string>("");
 
   // Load from search params (History)
   React.useEffect(() => {
@@ -47,24 +53,65 @@ function ChartGPTContent() {
         setAiData(item.result.config);
         setEditableConfig(item.result.config);
         setParsedData(item.result.data);
+        setInsight(item.result.insight || "");
         setPrompt(item.input);
         setStep("visualize");
       }
     }
-  }, [searchParams, history.items, setAiData, setParsedData]);
+  }, [searchParams, history.items, setAiData, setParsedData, setInsight, setPrompt, setStep]);
 
   React.useEffect(() => {
     if (rawChartConfig && isValidChartConfig(rawChartConfig)) {
       setEditableConfig(rawChartConfig);
+      lastAnalyzedConfigRef.current = JSON.stringify({
+        type: rawChartConfig.type,
+        xAxis: rawChartConfig.xAxis,
+        dataKeys: rawChartConfig.dataKeys
+      });
     }
   }, [rawChartConfig]);
+
+  // Reactive Insight Updates
+  React.useEffect(() => {
+    if (step !== "visualize" || !editableConfig || !parsedData || isAnalyzing) return;
+
+    const currentStructuralConfig = JSON.stringify({
+      type: editableConfig.type,
+      xAxis: editableConfig.xAxis,
+      dataKeys: editableConfig.dataKeys
+    });
+
+    // Skip if config hasn't structurally changed
+    if (currentStructuralConfig === lastAnalyzedConfigRef.current) return;
+
+    const timer = setTimeout(() => {
+      const insightPrompt = chartInsightPrompt(
+        JSON.stringify(parsedData.data.slice(0, 50)), 
+        JSON.stringify(editableConfig), 
+        prompt
+      );
+      
+      runInsight(insightPrompt).then((finalInsight) => {
+        lastAnalyzedConfigRef.current = currentStructuralConfig;
+        
+        // Update history with new insight
+        history.save({
+          title: editableConfig.title || prompt,
+          input: prompt,
+          result: { config: editableConfig, data: parsedData, insight: finalInsight },
+        });
+      });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [editableConfig, step, parsedData, prompt, runInsight, isAnalyzing, history]);
 
   // Sync step with data state
   React.useEffect(() => {
     if (parsedData && step === "upload") {
       setStep("preview");
     }
-  }, [parsedData, step]);
+  }, [parsedData, step, setStep]);
 
   const handleFileSelect = (selectedFile: File) => {
     upload(selectedFile);
@@ -84,19 +131,24 @@ function ChartGPTContent() {
         updateContext("chartgpt", { config, columns: parsedData.columns });
 
         setStep("visualize");
-        history.save({
-          title: config.title || p,
-          input: p,
-          result: { config, data: parsedData! },
-        }).then((item) => {
-          toast("Chart saved to history", "success");
-          addNotification({
-            type: "ai",
-            title: "Visualization Ready",
-            message: `ChartGPT created '${item?.title}' from your data.`,
-            module: "chartgpt",
-            action: "View Chart",
-            actionHref: `/chartgpt?id=${item?.id}`
+
+        // Trigger AI Insight Analysis
+        const insightPrompt = chartInsightPrompt(JSON.stringify(parsedData.data.slice(0, 50)), JSON.stringify(config), p);
+        runInsight(insightPrompt).then((finalInsight) => {
+          history.save({
+            title: config.title || p,
+            input: p,
+            result: { config, data: parsedData!, insight: finalInsight },
+          }).then((item) => {
+            toast("Visualization & Intelligence saved", "success");
+            addNotification({
+              type: "ai",
+              title: "Intelligence Analysis Ready",
+              message: `ChartGPT analysis for '${item?.title}' is complete.`,
+              module: "chartgpt",
+              action: "View Intelligence",
+              actionHref: `/chartgpt?id=${item?.id}`
+            });
           });
         });
       } else if (config) {
@@ -108,6 +160,7 @@ function ChartGPTContent() {
   const handleReset = () => {
     resetFile();
     resetAi();
+    resetInsight();
     setPrompt("");
     setStep("upload");
   };
@@ -262,12 +315,13 @@ Aug,7800,4900,225,South`;
                         onChange={setEditableConfig} 
                       />
                     </div>
-                    <div className="lg:col-span-9 min-w-0">
+                    <div className="lg:col-span-9 space-y-8 min-w-0">
                       <ChartRenderer
                         config={editableConfig}
                         data={parsedData.data}
                         onReset={() => setStep("preview")}
                       />
+                      <ChartInsight insight={insight} isLoading={isInsightLoading} />
                     </div>
                   </div>
                 </motion.div>

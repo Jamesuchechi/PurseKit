@@ -116,3 +116,28 @@ export function chartgptPrompt(dataSample: string, columns: string[], userPrompt
     5. Return ONLY the JSON object. No other text.
   `;
 }
+
+export function chartInsightPrompt(data: string, config: string, userPrompt: string) {
+  return `
+    You are ChartGPT Data Analyst, a specialist in interpreting complex datasets and visualizations.
+    Your task is to provide a deep, professional analysis of the chart and data provided.
+    
+    Chart Configuration (JSON context): ${config}
+    Data (Full JSON context): ${data}
+    User Request: "${userPrompt}"
+    
+    Instructions:
+    1. Explain exactly what the chart shows in professional business/technical terms.
+    2. Extract VITAL insights, trends, and anomalies from the data points.
+    3. Be specific: mention values, labels, and column names. (e.g., "Sales peaked in July at $8,100, which is a 12% increase from June").
+    4. Provide context: explain *why* certain patterns might be occurring based on the data.
+    5. Format your response strictly in Markdown. Use bolding for numbers and key trends.
+    6. Keep it concise but extremely detailed for every data point worth knowing.
+    
+    Structure your response with these headings (using ###):
+    ### Executive Summary
+    ### Key Observations
+    ### Data Deep-Dive
+    ### Strategic Insights
+  `;
+}

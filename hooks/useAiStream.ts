@@ -37,15 +37,17 @@ export function useAiStream() {
       if (!reader) throw new Error("Response body is not readable");
 
       let buffer = "";
+      let finalOutput = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
           // Close any unclosed fenced code block
-          setOutput((final) => {
-            const backtickCount = final.split("```").length - 1;
-            return backtickCount % 2 !== 0 ? final + "\n```" : final;
-          });
+          const backtickCount = finalOutput.split("```").length - 1;
+          if (backtickCount % 2 !== 0) {
+            finalOutput += "\n```";
+            setOutput(finalOutput);
+          }
           break;
         }
 
@@ -64,16 +66,19 @@ export function useAiStream() {
             const json = JSON.parse(payload);
             const delta = json?.choices?.[0]?.delta?.content;
             if (typeof delta === "string") {
-              setOutput((prev) => prev + delta);
+              finalOutput += delta;
+              setOutput(finalOutput);
             }
           } catch {
             // Malformed SSE line — skip silently
           }
         }
       }
+      return finalOutput;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An error occurred during streaming.";
       setError(message);
+      return "";
     } finally {
       setIsLoading(false);
     }
