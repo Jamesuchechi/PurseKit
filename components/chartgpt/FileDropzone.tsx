@@ -107,9 +107,24 @@ export function FileDropzone({
               </p>
             </div>
 
-            <Button variant="outline" size="sm" className="mt-4 pointer-events-none group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-all">
-              Browse Files
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center gap-3 mt-4">
+              <Button variant="primary" size="sm" className="pointer-events-none group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-all h-10 px-6">
+                Browse Files
+              </Button>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-muted uppercase tracking-widest">or</span>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Custom event or prop to trigger sample
+                    window.dispatchEvent(new CustomEvent('pulsekit:load-sample-data'));
+                  }}
+                  className="text-[10px] font-black uppercase tracking-[0.2em] text-accent hover:underline px-3 py-2 rounded-xl hover:bg-accent/5 transition-all"
+                >
+                  Try with sample data
+                </button>
+              </div>
+            </div>
           </motion.div>
         ) : (
           <motion.div

@@ -1,0 +1,21 @@
+{
+  "name": "PulseKit AI Engineering Workspace",
+  "short_name": "PulseKit",
+  "description": "Professional AI-powered workspace for code analysis, spec generation, and data visualization.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#06b6d4",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

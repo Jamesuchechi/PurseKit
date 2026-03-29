@@ -16,8 +16,10 @@ import { chartgptPrompt } from "@/lib/prompts";
 import { ChartConfigEditor } from "@/components/chartgpt/ChartConfigEditor";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import { useModuleContext } from "@/context/ModuleContext";
+import { useGlobalActions } from "@/hooks/useGlobalActions";
 import type { ChartConfig } from "@/types";
-import type { ParsedData } from "@/lib/csv-parser";
+import { type ParsedData, inferColumnTypes } from "@/lib/csv-parser";
 
 export default function ChartGPTPage() {
   const { file, parsedData, error: uploadError, isLoading: isUploading, upload, reset: resetFile, setParsedData } = useFileUpload();
@@ -26,10 +28,12 @@ export default function ChartGPTPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const history = useHistory<{ config: ChartConfig; data: ParsedData }>("chartgpt");
+  const { updateContext } = useModuleContext();
 
   const [step, setStep] = React.useState<"upload" | "preview" | "visualize">("upload");
   const [configError, setConfigError] = React.useState<string | null>(null);
   const [editableConfig, setEditableConfig] = React.useState<ChartConfig | null>(null);
+  const [prompt, setPrompt] = React.useState("");
 
   // Load from search params (History)
   React.useEffect(() => {
@@ -40,6 +44,7 @@ export default function ChartGPTPage() {
         setAiData(item.result.config);
         setEditableConfig(item.result.config);
         setParsedData(item.result.data);
+        setPrompt(item.input);
         setStep("visualize");
       }
     }
@@ -62,43 +67,79 @@ export default function ChartGPTPage() {
     upload(selectedFile);
   };
 
-  const handleAnalyze = async (prompt: string) => {
-    if (!parsedData) return;
-    setConfigError(null);
+  const handleAnalyze = async (customPrompt?: string) => {
+    const p = customPrompt || prompt;
+    if (!p.trim() || !parsedData) return;
 
-    // Take a small sample of the data to avoid token limits
-    const sample = parsedData.data.slice(0, 5);
-    const dataString = JSON.stringify(sample);
-    const fullPrompt = chartgptPrompt(dataString, parsedData.columns, prompt);
-    
-    const config = await runAi(fullPrompt, {
-      provider: "groq",
-      model: "llama-3.3-70b-versatile",
-    });
+    // Set initial context for chat
+    updateContext("chartgpt", { prompt: p, columns: parsedData.columns });
 
-    if (!config) return; // error is already in aiError state
+    const fullPrompt = chartgptPrompt(JSON.stringify(parsedData.data.slice(0, 5)), parsedData.columns, p);
+    runAi(fullPrompt).then((config) => {
+      if (config && isValidChartConfig(config)) {
+        // Update context with final chart config
+        updateContext("chartgpt", { config, columns: parsedData.columns });
 
-    // Runtime validation guard
-    if (!isValidChartConfig(config)) {
-      setConfigError("The AI returned an invalid chart configuration. Please try rephrasing your request.");
-      return;
-    }
-
-    setStep("visualize");
-    history.save({
-      title: config.title || prompt,
-      input: prompt,
-      result: { config, data: parsedData! },
-    }).then(() => {
-      toast("Chart saved to history", "success");
+        setStep("visualize");
+        history.save({
+          title: config.title || p,
+          input: p,
+          result: { config, data: parsedData! },
+        }).then(() => {
+          toast("Chart saved to history", "success");
+        });
+      } else if (config) {
+        setConfigError("The AI returned an invalid chart configuration. Please try rephrasing your request.");
+      }
     });
   };
 
   const handleReset = () => {
     resetFile();
     resetAi();
+    setPrompt("");
     setStep("upload");
   };
+
+  const handleLoadSample = React.useCallback(() => {
+    const sampleCSV = `Month,Sales,Expenses,Orders,Region
+Jan,4500,3200,120,North
+Feb,5200,3400,145,North
+Mar,4800,3100,130,South
+Apr,6100,4200,180,East
+May,5900,3800,165,West
+Jun,7200,4500,210,East
+Jul,8100,5100,240,North
+Aug,7800,4900,225,South`;
+    
+    // Process sample CSV into ParsedData
+    const rows = sampleCSV.split('\n').filter(r => r.trim());
+    const headers = rows[0].split(',');
+    const data = rows.slice(1).map(row => {
+      const vals = row.split(',');
+      return headers.reduce((acc, h, i) => ({ ...acc, [h]: isNaN(Number(vals[i])) ? vals[i] : Number(vals[i]) }), {});
+    });
+
+    setParsedData({
+      data,
+      columns: headers,
+      types: inferColumnTypes(data, headers)
+    });
+    setStep("preview");
+    toast("Sample dataset loaded: Monthly Sales Performance", "success");
+  }, [setParsedData, setStep, toast]);
+
+  React.useEffect(() => {
+    const listener = () => handleLoadSample();
+    window.addEventListener('pulsekit:load-sample-data', listener);
+    return () => window.removeEventListener('pulsekit:load-sample-data', listener);
+  }, [handleLoadSample]);
+
+  useGlobalActions({
+    onAnalyze: () => handleAnalyze(),
+    onClear: handleReset,
+    onExport: () => toast("Use the export menu on the chart result", "info"),
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-background dark:bg-void transition-colors duration-300">
@@ -165,7 +206,12 @@ export default function ChartGPTPage() {
                     </div>
                     <div className="lg:col-span-4 space-y-8 min-w-0">
                       <div className="sticky top-8">
-                        <ChartPromptInput onAnalyze={handleAnalyze} isLoading={isAnalyzing} />
+                        <ChartPromptInput 
+                          onAnalyze={handleAnalyze} 
+                          isLoading={isAnalyzing} 
+                          prompt={prompt}
+                          setPrompt={setPrompt}
+                        />
                         {(aiError || configError) && (
                           <p className="mt-4 text-sm text-danger bg-danger/5 border border-danger/10 p-3 rounded-xl flex items-center gap-2">
                             <RotateCcw className="w-4 h-4" />

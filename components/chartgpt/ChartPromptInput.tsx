@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/Textarea";
 interface ChartPromptInputProps {
   onAnalyze: (prompt: string) => void;
   isLoading?: boolean;
+  prompt: string;
+  setPrompt: (value: string) => void;
 }
 
 const suggestions = [
@@ -19,8 +21,7 @@ const suggestions = [
   { label: "Correlation between age and spend", icon: Sparkles },
 ];
 
-export function ChartPromptInput({ onAnalyze, isLoading }: ChartPromptInputProps) {
-  const [prompt, setPrompt] = React.useState("");
+export function ChartPromptInput({ onAnalyze, isLoading, prompt, setPrompt }: ChartPromptInputProps) {
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();

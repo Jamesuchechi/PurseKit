@@ -6,10 +6,9 @@ import { generateAiResponse, type AiMessage, type AiProvider } from "@/lib/ai";
  * Securely proxies requests to the selected provider.
  */
 
-// Using default Node.js runtime for superior local fetch stability
-
 interface RequestBody {
-  prompt: string;
+  prompt?: string;
+  messages?: AiMessage[];
   systemPrompt?: string;
   provider: AiProvider;
   model: string;
@@ -17,13 +16,18 @@ interface RequestBody {
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, systemPrompt, provider, model } = await req.json() as RequestBody;
+    const { prompt, messages: history, systemPrompt, provider, model } = await req.json() as RequestBody;
 
     const messages: AiMessage[] = [];
     if (systemPrompt) {
       messages.push({ role: "system", content: systemPrompt });
     }
-    messages.push({ role: "user", content: prompt });
+    
+    if (history && history.length > 0) {
+      messages.push(...history);
+    } else if (prompt) {
+      messages.push({ role: "user", content: prompt });
+    }
 
     const response = await generateAiResponse({
       provider: provider as AiProvider,

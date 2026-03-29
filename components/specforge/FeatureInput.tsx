@@ -58,7 +58,14 @@ export function FeatureInput({
           Describe the feature.
         </h1>
         <p className="text-lg text-muted-foreground w-full max-w-2xl mx-auto">
-          Write a plain-English explanation of your idea, and SpecForge will instantly generate a structured PRD.
+          Write a plain-English explanation of your idea, or{" "}
+          <button 
+            onClick={() => setDescription(EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)])}
+            className="text-accent underline hover:text-accent-foreground transition-colors"
+          >
+            try a random example
+          </button>{" "}
+          to see SpecForge in action.
         </p>
       </div>
 

@@ -11,7 +11,8 @@ import {
   History, 
   Sun, 
   Moon,
-  Zap
+  Zap,
+  Sparkles
 } from "lucide-react";
 import * as React from "react";
 import { useTheme } from "next-themes";
@@ -30,9 +31,10 @@ interface MobileNavProps {
   isOpen: boolean;
   onClose: () => void;
   onHistoryClick: () => void;
+  onChatClick: () => void;
 }
 
-export function MobileNav({ isOpen, onClose, onHistoryClick }: MobileNavProps) {
+export function MobileNav({ isOpen, onClose, onHistoryClick, onChatClick }: MobileNavProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -108,6 +110,18 @@ export function MobileNav({ isOpen, onClose, onHistoryClick }: MobileNavProps) {
 
             {/* Actions */}
             <div className="p-4 border-t border-border/50 space-y-2 bg-muted/5">
+              <button
+                onClick={() => {
+                  onChatClick();
+                  onClose();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-accent bg-accent/5 border border-accent/10 hover:bg-accent/10"
+              >
+                <Sparkles className="w-5 h-5 shrink-0" />
+                <span className="font-bold text-sm">AI Assistant</span>
+                <div className="absolute right-4 w-2 h-2 rounded-full bg-accent animate-pulse" />
+              </button>
+
               <button
                 onClick={() => {
                   onHistoryClick();

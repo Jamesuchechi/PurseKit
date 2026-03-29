@@ -26,6 +26,11 @@ export const metadata: Metadata = {
   description: "Code analysis, spec generation, and data visualization — powered by AI. Built for builders.",
   keywords: ["AI", "developer tools", "data science", "code analysis", "PRD generator", "chart builder"],
   authors: [{ name: "PulseKit Team" }],
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
   openGraph: {
     title: "PulseKit — AI Workspace for Engineers",
     description: "The future of engineering workflows",

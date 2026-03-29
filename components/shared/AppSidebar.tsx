@@ -11,7 +11,9 @@ import {
   History, 
   ChevronLeft,
   Moon,
-  Sun
+  Sun,
+  Sparkles,
+  LineChart
 } from "lucide-react";
 import * as React from "react";
 import { useTheme } from "next-themes";
@@ -25,13 +27,15 @@ const navItems = [
   { href: "/devlens", label: "DevLens", icon: Brain, color: "text-accent" },
   { href: "/specforge", label: "SpecForge", icon: FileText, color: "text-amber" },
   { href: "/chartgpt", label: "ChartGPT", icon: BarChart3, color: "text-violet" },
+  { href: "/analytics", label: "Analytics", icon: LineChart, color: "text-emerald-500" },
 ];
 
 interface AppSidebarProps {
   onHistoryClick: () => void;
+  onChatClick: () => void;
 }
 
-export function AppSidebar({ onHistoryClick }: AppSidebarProps) {
+export function AppSidebar({ onHistoryClick, onChatClick }: AppSidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const { theme, setTheme } = useTheme();
@@ -132,6 +136,33 @@ export function AppSidebar({ onHistoryClick }: AppSidebarProps) {
 
         {/* Footer Actions */}
         <div className="p-3 border-t border-border/50 space-y-1.5 bg-muted/5">
+          {/* AI Assistant Button */}
+          {isCollapsed ? (
+            <Tooltip content="AI Assistant" position="right">
+              <button
+                onClick={onChatClick}
+                className={cn(
+                  "w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group",
+                  "text-accent bg-accent/5 hover:bg-accent/10 border border-accent/10"
+                )}
+              >
+                <Sparkles className="w-5 h-5 shrink-0" />
+              </button>
+            </Tooltip>
+          ) : (
+            <button
+              onClick={onChatClick}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative overflow-hidden",
+                "text-accent bg-accent/5 hover:bg-accent/10 border border-accent/10"
+              )}
+            >
+              <Sparkles className="w-5 h-5 shrink-0" />
+              <span className="font-bold text-sm">AI Assistant</span>
+              <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            </button>
+          )}
+
           {/* History Button */}
           {isCollapsed ? (
             <Tooltip content="Session History" position="right">

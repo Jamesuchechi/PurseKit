@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Download, Play, Trash2, Wand2 } from "lucide-react";
+import { Download, Play, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { CodeInput } from "@/components/devlens/CodeInput";
@@ -14,6 +14,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { downloadFile, truncate } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
 import { useSearchParams } from "next/navigation";
+import { useGlobalActions } from "@/hooks/useGlobalActions";
 
 const SAMPLE_CODE = `function processData(input) {
   if (input == null) return false;
@@ -114,6 +115,12 @@ export default function DevLensPage() {
     downloadFile(output, "devlens-analysis.md", "text/markdown");
   };
 
+  useGlobalActions({
+    onAnalyze: handleAnalyze,
+    onExport: handleExport,
+    onClear: handleClear,
+  });
+
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <PageHeader 
@@ -188,9 +195,12 @@ export default function DevLensPage() {
                 <div className="absolute inset-0 bg-noise opacity-20 pointer-events-none" />
                 <Wand2 className="h-12 w-12 mb-4 opacity-50" />
                 <h3 className="text-lg font-bold">Awaiting Code</h3>
-                <p className="max-w-xs mt-2 text-sm opacity-80">
+                <p className="max-w-xs mt-2 text-sm opacity-80 mb-6">
                   Paste your active code snippet on the left and click Analyze to generate structural insights.
                 </p>
+                <Button variant="outline" size="sm" onClick={handleSample} className="rounded-full border-accent/30 text-accent hover:bg-accent/5">
+                  <Sparkles className="h-4 w-4 mr-2" /> Try an example
+                </Button>
               </div>
             ) : (
               <AnalysisOutput 

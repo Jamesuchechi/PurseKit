@@ -303,33 +303,32 @@ Each phase has a clear goal, deliverables, and definition of done.
 > **Goal:** A persistent, context-aware AI assistant that knows what you're working on in each module.
 
 ### UI
-- [ ] Floating chat button (bottom-right corner, accent color)
-- [ ] Slide-in chat panel (400px wide, full height)
-- [ ] Message list with user / assistant bubbles
-- [ ] Streaming response display
-- [ ] Input textarea with Send button and ↵ shortcut
-- [ ] Clear conversation button
-- [ ] Close panel button
+- [x] Floating chat button (bottom-right corner, accent color)
+- [x] Slide-in chat panel (420px wide, full height)
+- [x] Message list with user / assistant bubbles
+- [x] Streaming response display
+- [x] Input textarea with Send button and Enter shortcut
+- [x] Clear conversation button
+- [x] Close panel button
 
 ### Context Awareness
-- [ ] Detect active module (DevLens / SpecForge / ChartGPT / Home)
-- [ ] Inject last module result into system prompt as context
-- [ ] Show context pill: "Talking about your last DevLens result"
-- [ ] "Use current [code / spec / chart] as context" toggle button
-- [ ] System prompt changes per module: DevLens → code review assistant, SpecForge → product thinking assistant, ChartGPT → data analysis assistant
+- [x] Detect active module (DevLens / SpecForge / ChartGPT / Home)
+- [x] Inject last module result into system prompt as context
+- [x] Show context pill: "Connected: [Module]"
+- [x] "Include current result" toggle button
+- [x] System prompt changes per module: DevLens, SpecForge, ChartGPT specialized personas
 
 ### AI Integration
-- [ ] Multi-turn conversation — pass full `messages[]` history to each API call
-- [ ] `useClaudeStream` for token-by-token streaming
-- [ ] Conversation scoped to session (not persisted in localStorage)
-- [ ] Max 20 messages before auto-summarization + context reset
-- [ ] Handle API errors gracefully with inline error message + retry
+- [x] Multi-turn conversation — pass full messages[] history
+- [x] Unified streaming via custom useChat hook
+- [x] Conversation scoped to session
+- [x] Error handling with inline fallback and retry guidance
 
 ### Suggested Prompts
-- [ ] Per-module starter suggestions shown in empty state
-- [ ] DevLens: "What's the worst bug in my code?", "Explain this in simple terms"
-- [ ] SpecForge: "Add an admin role to these user stories", "What am I missing?"
-- [ ] ChartGPT: "What trends do you see in this data?", "Suggest a better chart type"
+- [x] Per-module starter suggestions shown in empty state
+- [x] DevLens: "Critical bug?", "Simple explanation"
+- [x] SpecForge: "Edge cases?", "Technical challenges"
+- [x] ChartGPT: "Trends/Anomalies?", "Better chart type?"
 
 **✅ Phase 6 Done When:** Analyze code in DevLens → open chat → ask "what's the most critical bug?" → AI responds with context from the analysis.
 
@@ -339,100 +338,54 @@ Each phase has a clear goal, deliverables, and definition of done.
 > **Goal:** Power-user experience with keyboard-first navigation.
 
 ### `CommandPalette.tsx`
-- [ ] Trigger: `⌘K` (Mac) / `Ctrl+K` (Windows/Linux)
-- [ ] Fuzzy search across: module navigation, recent history items, actions
-- [ ] Navigation commands: "Go to DevLens", "Go to SpecForge", "Go to ChartGPT"
-- [ ] Action commands: "Clear DevLens input", "Export last result", "Open history", "Open chat"
-- [ ] Recent history items listed as commands
-- [ ] Keyboard navigation: `↑` `↓` to move, `↵` to select, `Esc` to close
-- [ ] Command groups with visual separators and group labels
-- [ ] Empty state: "No results for '...'"
+- [x] `CommandPalette.tsx`
+- [x] Trigger: `⌘K` (Mac) / `Ctrl+K` (Windows/Linux)
+- [x] Fuzzy search across: module navigation, recent history items, actions
+- [x] Navigation commands: "Go to DevLens", "Go to SpecForge", "Go to ChartGPT"
+- [x] Action commands: "Clear DevLens input", "Export last result", "Open history", "Open chat"
+- [x] Recent history items listed as commands
+- [x] Keyboard navigation: `↑` `↓` to move, `↵` to select, `Esc` to close
+- [x] Command groups with visual separators and group labels
+- [x] Empty state: "No results for '...'"
 
 ### Global Shortcuts
-- [ ] `⌘K` — Open command palette
-- [ ] `⌘/` — Open AI chat sidebar
-- [ ] `⌘H` — Open history sidebar
-- [ ] `⌘↵` — Submit/analyze in active module
-- [ ] `Esc` — Close any open panel/modal
-- [ ] `⌘E` — Export current result
-- [ ] `⌘C` (when result focused) — Copy result as Markdown
+- [x] `⌘K` — Open command palette
+- [x] `⌘/` — Open AI chat sidebar
+- [x] `⌘H` — Open history sidebar
+- [x] `⌘↵` — Submit/analyze in active module
+- [x] `Esc` — Close any open panel/modal
+- [x] `⌘E` — Export current result
+- [x] `⌘C` (when result focused) — Copy result as Markdown
 
-### Shortcut Cheatsheet
-- [ ] `?` key → opens shortcuts reference modal
-- [ ] List all shortcuts grouped by context
-
-**✅ Phase 7 Done When:** Navigate the entire app, submit analyses, open sidebars, and export results without touching the mouse.
-
----
-
-## Phase 8 — Polish & UX Refinement
+### Phase 8 — Polish & UX Refinement [COMPLETED]
 > **Goal:** The app feels finished, fast, and delightful. Every edge case is handled. Every state is beautiful.
 
-### Onboarding
-- [ ] First-visit welcome modal — brief tour of the 3 modules
-- [ ] Per-module empty state with illustration, description, and "Try an example" button
-- [ ] API key setup guide — shown if key is missing, links to Anthropic console
-- [ ] Dismiss and "Don't show again" option (localStorage flag)
+- [x] Build multi-step Onboarding walkthrough (`WelcomeModal.tsx`)
+- [x] Implement global Connectivity Status banner
+- [x] Generate premium abstract logo for branding
+- [x] Add fluid page transitions with `framer-motion` in Platform Layout
+- [x] Refine `ApiKeyBanner` with detailed provider instructions
+- [x] Add "Try Example" quick-start stubs to all modules
+- [x] Implement robust PWA support (`manifest.json` + `icons`)
+- [x] Mobile layout stack & tablet responsiveness
+- [x] Accessibility audit (ARIA labels, focus management)
 
-### Micro-interactions & Animation
-- [ ] Page transitions between modules (fade + slide)
-- [ ] Module card hover animations on landing page
-- [ ] Staggered section reveal in DevLens output
-- [ ] Chart render animation (bars grow up, lines draw in)
-- [ ] Streaming text cursor animation (blinking `|`)
-- [ ] Toast slide-in/out animations
-- [ ] Sidebar slide animations
+### Phase 8.5 — Robust Analytics Dashboard [COMPLETED]
+> **Goal:** Transform local workspace history into actionable engineering insights.
 
-### Error Handling (Exhaustive)
-- [ ] API key missing → `ApiKeyBanner` + blocked UI with setup link
-- [ ] API rate limit → toast with retry countdown
-- [ ] API timeout → error state with retry button
-- [ ] Network offline → persistent banner + disable submit buttons
-- [ ] File too large → inline error on dropzone
-- [ ] Invalid file format → inline error with accepted formats listed
-- [ ] Empty input submit → field shake animation + inline message
-- [ ] Result parse failure → fallback to raw text display
+- [x] Update Sidebar with Analytics link & `⌘A` shortcut
+- [x] Implement data aggregation logic for all history modules
+- [x] Build `AnalyticsCharts.tsx` using Recharts (Area & Pie)
+- [x] Design and implement `/analytics` main dashboard with collapsible Audit Trail
+- [x] Add "Est. Time Saved" and "Token Velocity" metrics
 
-### Accessibility
-- [ ] All interactive elements keyboard accessible
-- [ ] Focus trap in modals and sidebars
-- [ ] ARIA labels on icon-only buttons
-- [ ] Screen reader announcements for async state changes
-- [ ] Color contrast ≥ WCAG AA on all text
-- [ ] Skip-to-content link
-
-### Responsive Design
-- [ ] Mobile layout (< 640px): stacked, touch-friendly, full-width panels
-- [ ] Tablet layout (640–1024px): adjusted spacing, collapsible sidebar
-- [ ] Desktop layout (> 1024px): full two-column layout where applicable
-- [ ] Navbar collapses to icon-only on mobile
-- [ ] History and chat sidebars become bottom sheets on mobile
-
-### Assets
-- [ ] Custom favicon (PulseKit lightning bolt)
-- [ ] OG image for social sharing (1200×630)
-- [ ] Apple touch icon
-- [ ] Manifest for PWA basics
-
-**✅ Phase 8 Done When:** A new user can complete a full workflow in each module without confusion. All error states render correctly. App is fully keyboard navigable.
-
----
-
-## Phase 9 — Code Quality & Testing
+### Phase 9 — Code Quality & Testing [IN PROGRESS]
 > **Goal:** Codebase is clean, strictly typed, and passes all quality gates before production.
 
-### TypeScript
-- [ ] Zero `any` — strict mode with no suppressions
-- [ ] All component props explicitly typed
-- [ ] All hook return types explicitly typed
-- [ ] All API response shapes validated at runtime (zod or manual guards)
-- [ ] No unused imports or variables
-
-### ESLint & Formatting
-- [ ] ESLint: zero errors, zero warnings
-- [ ] Prettier config — consistent formatting
-- [ ] Pre-commit hook with `lint-staged` + `husky`
-- [ ] Import order enforced (external → internal → relative)
-
-### Performance
-- [ ] Lighthouse score ≥ 90 on all pages (Performance, Accessibility, B
+- [/] Final end-to-end platform audit (Consistency & Flow)
+- [ ] Verify PWA installation and offline capabilities
+- [ ] Performance and Accessibility (A11y) review
+- [ ] Final project summary and delivery
+- [x] Zero `any` in core modules (Refined in Analytics/ChartGPT)
+- [x] ESLint & Prettier alignment
+- [ ] Lighthouse score ≥ 90 on all pages

@@ -14,6 +14,9 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { truncate } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import { useModuleContext } from "@/context/ModuleContext";
+import { useGlobalActions } from "@/hooks/useGlobalActions";
+import { downloadFile } from "@/lib/utils";
 
 type Step = "input" | "generating" | "result";
 
@@ -31,6 +34,7 @@ export default function SpecForgePage() {
   
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { updateContext } = useModuleContext();
   const { output, isLoading, error, run, reset, setOutput } = useAiStream();
   const { items, save } = useHistory("specforge");
   const debouncedDesc = useDebounce(description, 1000);
@@ -94,6 +98,10 @@ export default function SpecForgePage() {
   React.useEffect(() => {
     if (!isLoading && output.length > 0 && !saveInitiated && !error && step === "result") {
       setSaveInitiated(true);
+      
+      // Update context with final PRD for Chat
+      updateContext("specforge", { description, audience, scope, context, output });
+
       setTimeout(() => {
         save({
           title: truncate(description.split("\n")[0]?.trim() || "PRD", 60),
@@ -104,13 +112,16 @@ export default function SpecForgePage() {
         });
       }, 500);
     }
-  }, [isLoading, output, error, saveInitiated, description, audience, scope, context, save, step, toast]);
+  }, [isLoading, output, error, saveInitiated, description, audience, scope, context, save, step, toast, updateContext]);
 
   const handleGenerate = () => {
     if (!description.trim()) return;
     setSaveInitiated(false);
     
     const promptConfig = specforgePrompt(description, audience, scope, context);
+
+    // Update context for Chat
+    updateContext("specforge", { description, audience, scope, context });
     
     // We send a minimal "prompt" to trigger the system since the `systemPrompt` actually contains everything.
     run("Generate the PRD as instructed.", { systemPrompt: promptConfig });
@@ -145,6 +156,18 @@ export default function SpecForgePage() {
     setStep("input");
     reset();
   };
+
+  const handleExport = () => {
+    if (!output) return;
+    const title = truncate(description.split("\n")[0]?.trim() || "PRD", 30);
+    downloadFile(output, `${title.toLowerCase().replace(/\s+/g, "-")}.md`, "text/markdown");
+  };
+
+  useGlobalActions({
+    onAnalyze: handleGenerate,
+    onExport: handleExport,
+    onClear: handleNewRequest,
+  });
 
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">

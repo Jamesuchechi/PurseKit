@@ -4,25 +4,94 @@ import * as React from "react";
 import { AppSidebar } from "@/components/shared/AppSidebar";
 import { HistorySidebar } from "@/components/shared/HistorySidebar";
 import { useHistory } from "@/hooks/useHistory";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { type HistoryItem } from "@/types";
 import Footer from "@/components/shared/Footer";
 import { MobileHeader } from "@/components/shared/MobileHeader";
 import { MobileNav } from "@/components/shared/MobileNav";
+import { ModuleProvider, useModuleContext } from "@/context/ModuleContext";
+import { ChatSidebar } from "@/components/shared/ChatSidebar";
+import { ChatToggle } from "@/components/shared/ChatToggle";
+import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
+import { CommandPalette } from "@/components/shared/CommandPalette";
+import { ShortcutCheatsheet } from "@/components/shared/ShortcutCheatsheet";
+import { WelcomeModal } from "@/components/shared/WelcomeModal";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { ConnectivityBanner } from "@/components/shared/ConnectivityBanner";
+import { ApiKeyBanner } from "@/components/shared/ApiKeyBanner";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function PlatformLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  return (
+    <ModuleProvider>
+      <PlatformLayoutContent>{children}</PlatformLayoutContent>
+    </ModuleProvider>
+  );
+}
+
+function PlatformLayoutContent({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
-  const router = useRouter();
+  const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false);
+  const [isCheatsheetOpen, setIsCheatsheetOpen] = React.useState(false);
+  const [isWelcomeOpen, setIsWelcomeOpen] = React.useState(false);
   
+  const router = useRouter();
+  const pathname = usePathname();
+  const { activeModule, lastResult } = useModuleContext();
+  const { isOnboarded, completeOnboarding } = useOnboarding();
+
+  // Show welcome modal if not onboarded
+  React.useEffect(() => {
+    if (isOnboarded === false) {
+      setIsWelcomeOpen(true);
+    }
+  }, [isOnboarded]);
+
+  const handleOnboardingComplete = () => {
+    setIsWelcomeOpen(false);
+    completeOnboarding();
+  };
+  
+  // ─── Global Keyboard Shortcuts ────────────────────────────────
+  useKeyboardShortcut("k", () => setIsCommandPaletteOpen(true));
+  useKeyboardShortcut("/", () => setIsChatOpen(true));
+  useKeyboardShortcut("h", () => setIsHistoryOpen(true));
+  useKeyboardShortcut("a", () => router.push("/analytics"), { metaKey: true });
+  useKeyboardShortcut("?", () => setIsCheatsheetOpen(prev => !prev), { metaKey: false, preventDefault: true, ignoreInputs: true });
+  
+  // Dispatchable actions
+  useKeyboardShortcut("enter", () => {
+    window.dispatchEvent(new CustomEvent("pulsekit:analyze"));
+  }, { metaKey: true, preventDefault: true, ignoreInputs: true });
+
+  useKeyboardShortcut("e", () => {
+    window.dispatchEvent(new CustomEvent("pulsekit:export"));
+  }, { metaKey: true, preventDefault: true, ignoreInputs: true });
+
+  const handleCommandAction = (actionId: string) => {
+    switch (actionId) {
+      case "open-chat": setIsChatOpen(true); break;
+      case "open-history": setIsHistoryOpen(true); break;
+      case "analyze": window.dispatchEvent(new CustomEvent("pulsekit:analyze")); break;
+      case "export": window.dispatchEvent(new CustomEvent("pulsekit:export")); break;
+      case "clear": window.dispatchEvent(new CustomEvent("pulsekit:clear")); break;
+    }
+  };
+
   // Aggregated history from all modules for the shared sidebar
   const { items: devlensItems, remove: removeDevLens, clear: clearDevLens } = useHistory("devlens");
   const { items: specforgeItems, remove: removeSpecForge, clear: clearSpecForge } = useHistory("specforge");
-  const { items: chartgptItems, remove: removeChartGPT, clear: clearChartGPT } = useHistory("chartgpt");
+  const { items: chartgptItems, remove: removeChartGPT, clear: clearSpecChartGPT } = useHistory("chartgpt");
 
   const allItems = React.useMemo(() => {
     return [...devlensItems, ...specforgeItems, ...chartgptItems]
@@ -44,33 +113,26 @@ export default function PlatformLayout({
   const handleClearAll = async () => {
     await clearDevLens();
     await clearSpecForge();
-    await clearChartGPT();
+    await clearSpecChartGPT();
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen overflow-hidden bg-background">
+    <div className="flex flex-col lg:flex-row h-screen overflow-hidden bg-background relative">
       {/* Desktop Sidebar - Fixed on desktop, hidden on mobile */}
-      <AppSidebar onHistoryClick={() => setIsHistoryOpen(true)} />
+      <AppSidebar 
+        onHistoryClick={() => setIsHistoryOpen(true)} 
+        onChatClick={() => setIsChatOpen(true)}
+      />
 
-      {/* Mobile Navigation Area */}
-      <MobileHeader onMenuClick={() => setIsMobileNavOpen(true)} />
+      {/* Mobile Navigation Sidebar */}
       <MobileNav 
         isOpen={isMobileNavOpen} 
         onClose={() => setIsMobileNavOpen(false)} 
         onHistoryClick={() => setIsHistoryOpen(true)} 
+        onChatClick={() => setIsChatOpen(true)}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <main className="flex-1 overflow-y-auto overflow-x-hidden styled-scrollbar pb-20 lg:pb-8 p-4 lg:p-8">
-          <div className="max-w-7xl mx-auto w-full">
-            {children}
-          </div>
-          <Footer />
-        </main>
-      </div>
-
-      {/* History Drawer */}
+      {/* Global UI Components */}
       <HistorySidebar 
         isOpen={isHistoryOpen} 
         onClose={() => setIsHistoryOpen(false)} 
@@ -79,6 +141,55 @@ export default function PlatformLayout({
         onRemove={handleRemoveItem}
         onClearAll={handleClearAll}
       />
+
+      <ChatSidebar isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <ChatToggle 
+        isOpen={isChatOpen} 
+        onClick={() => setIsChatOpen(!isChatOpen)} 
+        hasContext={activeModule !== "home" && lastResult !== null}
+      />
+
+      <CommandPalette 
+        isOpen={isCommandPaletteOpen} 
+        setIsOpen={setIsCommandPaletteOpen} 
+        onAction={handleCommandAction}
+      />
+
+      <ShortcutCheatsheet 
+        isOpen={isCheatsheetOpen} 
+        onClose={() => setIsCheatsheetOpen(false)} 
+      />
+
+      <WelcomeModal 
+        isOpen={isWelcomeOpen} 
+        onClose={() => setIsWelcomeOpen(false)} 
+        onComplete={handleOnboardingComplete}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <ConnectivityBanner />
+        <ApiKeyBanner />
+        <MobileHeader onMenuClick={() => setIsMobileNavOpen(true)} />
+        
+        <AnimatePresence mode="wait">
+          <motion.main 
+            key={pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="flex-1 overflow-y-auto custom-scrollbar relative"
+          >
+            {children}
+            <Footer />
+          </motion.main>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
+
+
+
+
