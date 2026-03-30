@@ -9,10 +9,11 @@ import type { ExecutionLog } from "@/lib/devlens/engine";
 interface OutputConsoleProps {
   logs: ExecutionLog[];
   onClear: () => void;
+  executionMode?: 'live' | 'simulation' | null;
   className?: string;
 }
 
-export function OutputConsole({ logs, onClear, className }: OutputConsoleProps) {
+export function OutputConsole({ logs, onClear, className, executionMode }: OutputConsoleProps) {
   const [copied, setCopied] = React.useState(false);
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
@@ -36,6 +37,23 @@ export function OutputConsole({ logs, onClear, className }: OutputConsoleProps) 
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-accent" />
           <span className="text-xs font-bold text-muted uppercase tracking-widest">Console Output</span>
+          
+          {executionMode === 'live' && (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 ml-2">
+              <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">Live Execution</span>
+            </div>
+          )}
+
+          {executionMode === 'simulation' && (
+            <div 
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 ml-2 cursor-help"
+              title="This language runs in AI simulation mode. Output is predicted, not executed."
+            >
+              <div className="w-1 h-1 rounded-full bg-amber-500" />
+              <span className="text-[10px] font-bold text-amber-500 uppercase tracking-tighter">AI Dry Run</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button 

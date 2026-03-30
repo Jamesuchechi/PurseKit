@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { 
   Zap, Github, Twitter, Linkedin, Youtube, Mail, 
@@ -47,6 +48,21 @@ const socialLinks = [
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const pathname = usePathname();
+
+  // Determine if we are in app view context
+  const isAppView = 
+    pathname?.startsWith("/dashboard") || 
+    pathname?.startsWith("/devlens") || 
+    pathname?.startsWith("/specforge") || 
+    pathname?.startsWith("/chartgpt") || 
+    pathname?.startsWith("/analytics") || 
+    pathname?.startsWith("/notifications") || 
+    pathname?.startsWith("/settings");
+
+  const getAdaptiveHref = (slug: string) => {
+    return isAppView ? `${slug}?view=app` : slug;
+  };
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,7 +177,7 @@ export default function Footer() {
                 return (
                   <li key={link.label}>
                     <Link
-                      href={link.href}
+                      href={getAdaptiveHref(link.href)}
                       className="group flex items-center gap-2 text-muted hover:text-foreground transition-colors text-sm"
                     >
                       <Icon className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -182,7 +198,7 @@ export default function Footer() {
                 return (
                   <li key={link.label}>
                     <Link
-                      href={link.href}
+                      href={getAdaptiveHref(link.href)}
                       className="group flex items-center gap-2 text-muted hover:text-foreground transition-colors text-sm"
                     >
                       <Icon className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -203,7 +219,7 @@ export default function Footer() {
                 return (
                   <li key={link.label}>
                     <Link
-                      href={link.href}
+                      href={getAdaptiveHref(link.href)}
                       className="group flex items-center gap-2 text-muted hover:text-foreground transition-colors text-sm"
                     >
                       <Icon className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -222,7 +238,7 @@ export default function Footer() {
               {footerLinks.legal.map((link) => (
                 <li key={link.label}>
                   <Link
-                    href={link.href}
+                    href={getAdaptiveHref(link.href)}
                     className="text-muted hover:text-foreground transition-colors text-sm inline-flex items-center gap-1 group"
                   >
                     {link.label}

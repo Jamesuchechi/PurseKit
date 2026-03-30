@@ -7,10 +7,12 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { FeatureInput } from "@/components/specforge/FeatureInput";
 import { PRDOutput } from "@/components/specforge/PRDOutput";
 import { ExportButton } from "@/components/specforge/ExportButton";
-import { CrucibleArena, type CrucibleMessage } from "@/components/specforge/CrucibleArena";
-import { CrucibleVerdict } from "@/components/specforge/CrucibleVerdict";
+import { CrucibleArena } from "@/components/specforge/CrucibleArena";
 import { useAiStream } from "@/hooks/useAiStream";
-import { specforgePrompt, specforgeRefinementPrompt, crucibleIntroPrompt, crucibleResponsePrompt, crucibleVerdictPrompt } from "@/lib/prompts";
+import { 
+  specforgePrompt, 
+  specforgeRefinementPrompt
+} from "@/lib/prompts";
 import { useHistory } from "@/hooks/useHistory";
 import { useDebounce } from "@/hooks/useDebounce";
 import { truncate } from "@/lib/utils";
@@ -22,7 +24,7 @@ import { downloadFile } from "@/lib/utils";
 import { Suspense } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
 
-type Step = "input" | "generating" | "result" | "crucible" | "verdict";
+type Step = "input" | "generating" | "result" | "crucible";
 
 function SpecForgeContent() {
   const [step, setStep] = React.useState<Step>("input");
@@ -46,12 +48,6 @@ function SpecForgeContent() {
   const debouncedContext = useDebounce(context, 1000);
   const [isReady, setIsReady] = React.useState(false);
   const [saveInitiated, setSaveInitiated] = React.useState(false);
-
-  // Crucible State
-  const [crucibleMessages, setCrucibleMessages] = React.useState<CrucibleMessage[]>([]);
-  const [crucibleRound, setCrucibleRound] = React.useState(0);
-  const [verdict, setVerdict] = React.useState("");
-  const MAX_ROUNDS = 4;
 
   // Load from search params (History)
   React.useEffect(() => {
@@ -142,7 +138,6 @@ function SpecForgeContent() {
     // Update context for Chat
     updateContext("specforge", { description, audience, scope, context });
     
-    // We send a minimal "prompt" to trigger the system since the `systemPrompt` actually contains everything.
     run("Generate the PRD as instructed.", { systemPrompt: promptConfig });
   };
 
@@ -174,97 +169,9 @@ function SpecForgeContent() {
     downloadFile(output, `${title.toLowerCase().replace(/\s+/g, "-")}.md`, "text/markdown");
   };
 
-  // --- CRUCIBLE LOGIC ---
   const handleEnterCrucible = () => {
     setStep("crucible");
-    setCrucibleMessages([]);
-    setCrucibleRound(1);
-    
-    // Kick off with intro
-    const prompt = crucibleIntroPrompt(output);
-    run("Enter the Arena", { systemPrompt: prompt });
   };
-
-  const handleSendResponse = (answer: string) => {
-    const newMessage: CrucibleMessage = {
-        id: Date.now().toString(),
-        role: "user",
-        content: answer,
-        timestamp: new Date()
-    };
-    
-    const nextRound = crucibleRound + 1;
-    setCrucibleRound(nextRound);
-    setCrucibleMessages(prev => [...prev, newMessage]);
-
-    // Format history for AI
-    const historyText = [...crucibleMessages, newMessage]
-        .map(m => `[${m.role.toUpperCase()}${m.investor ? `: ${m.investor}` : ""}] ${m.content}`)
-        .join("\n");
-
-    const prompt = crucibleResponsePrompt(output, historyText);
-    run(answer, { systemPrompt: prompt });
-  };
-
-  const handleFinishArena = () => {
-    setStep("verdict");
-    const historyText = crucibleMessages
-        .map(m => `[${m.role.toUpperCase()}${m.investor ? `: ${m.investor}` : ""}] ${m.content}`)
-        .join("\n");
-    const prompt = crucibleVerdictPrompt(output, historyText);
-    run("Summarize investment verdict", { systemPrompt: prompt });
-  };
-
-  // Handle stream state transitions
-  React.useEffect(() => {
-    if (isLoading) {
-       // do nothing
-    } else if (!isLoading && output) {
-        if (step === "generating") {
-            setStep("result");
-        } else if (step === "crucible") {
-            // Robust parsing
-            const investorMatch = output.match(/\[INVESTOR:\s*(.*?)\]/i);
-            const questionMatch = output.match(/\[QUESTION:\s*(.*?)\]/i);
-            
-            if (investorMatch && questionMatch) {
-                const investorName = investorMatch[1].trim();
-                const questionContent = questionMatch[1].trim();
-                
-                const aiMessage: CrucibleMessage = {
-                    id: Date.now().toString() + "-ai-" + crucibleRound,
-                    role: "investor",
-                    investor: investorName,
-                    content: questionContent,
-                    timestamp: new Date()
-                };
-                setCrucibleMessages(prev => [...prev, aiMessage]);
-                setTimeout(() => setOutput(""), 50); 
-            } else if (output.trim().length > 3) {
-                // Fallback for missing tags - clean up the text
-                const cleanText = output
-                    .replace(/\[INVESTOR:.*?\]/gi, "")
-                    .replace(/\[QUESTION:.*?\]/gi, "")
-                    .replace(/\[.*?:.*?\]/gi, "") // Catch-all for weird malformed tags
-                    .trim();
-
-                if (cleanText.length > 3) {
-                    const aiMessage: CrucibleMessage = {
-                        id: Date.now().toString() + "-ai-fallback-" + crucibleRound,
-                        role: "investor",
-                        investor: "Growth Grace", 
-                        content: cleanText,
-                        timestamp: new Date()
-                    };
-                    setCrucibleMessages(prev => [...prev, aiMessage]);
-                    setTimeout(() => setOutput(""), 50);
-                }
-            }
-        } else if (step === "verdict") {
-            setVerdict(output);
-        }
-    }
-  }, [isLoading, output, step, crucibleRound, setOutput]);
 
   useGlobalActions({
     onAnalyze: handleGenerate,
@@ -361,7 +268,7 @@ function SpecForgeContent() {
             </div>
           )}
         </div>
-      ) : step === "crucible" ? (
+      ) : (
         <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
            <PageHeader 
               icon={Skull}
@@ -371,20 +278,8 @@ function SpecForgeContent() {
             />
            
            <CrucibleArena 
-              messages={crucibleMessages}
-              isThinking={isLoading}
-              onSend={handleSendResponse}
-              round={crucibleRound}
-              maxRounds={MAX_ROUNDS}
-              onFinish={handleFinishArena}
-           />
-        </div>
-      ) : (
-        <div className="animate-in zoom-in-95 fade-in duration-1000">
-           <CrucibleVerdict 
-              verdict={verdict}
+              prdText={output}
               onRestart={handleNewRequest}
-              onExport={() => downloadFile(verdict, "investor-memo.md", "text/markdown")}
            />
         </div>
       )}

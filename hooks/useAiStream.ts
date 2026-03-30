@@ -1,19 +1,22 @@
 "use client";
 
 import * as React from "react";
+import { type AiMessage } from "@/lib/ai";
 
-/**
- * Hook for token-by-token AI streaming.
- * In a real app, this would call a server-side route that wraps callClaude.
- * Since we are building the frontend first, this is a skeleton for the module implementation.
- */
 export function useAiStream() {
   const [output, setOutput] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const isLoadingRef = React.useRef(false);
 
-  const run = async (prompt: string, options?: { systemPrompt?: string; provider?: string; model?: string }) => {
-    setIsLoading(true);
+  const run = React.useCallback(async (
+    prompt: string,
+    options?: { systemPrompt?: string; provider?: string; model?: string; messages?: AiMessage[] }
+  ) => {
+    if (isLoadingRef.current) return "";
+
+    isLoadingRef.current = true;
+    setIsLoading(true); 
     setError(null);
     setOutput("");
 
@@ -21,11 +24,12 @@ export function useAiStream() {
       const response = await fetch("/api/ai/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          prompt, 
+        body: JSON.stringify({
+          prompt,
+          messages: options?.messages,
           systemPrompt: options?.systemPrompt,
           provider: options?.provider,
-          model: options?.model
+          model: options?.model,
         }),
       });
 
@@ -33,7 +37,6 @@ export function useAiStream() {
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-
       if (!reader) throw new Error("Response body is not readable");
 
       let buffer = "";
@@ -42,7 +45,6 @@ export function useAiStream() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          // Close any unclosed fenced code block
           const backtickCount = finalOutput.split("```").length - 1;
           if (backtickCount % 2 !== 0) {
             finalOutput += "\n```";
@@ -51,10 +53,8 @@ export function useAiStream() {
           break;
         }
 
-        // Accumulate and split on SSE line boundaries
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
-        // Keep any partial line in the buffer
         buffer = lines.pop() ?? "";
 
         for (const line of lines) {
@@ -70,25 +70,31 @@ export function useAiStream() {
               setOutput(finalOutput);
             }
           } catch {
-            // Malformed SSE line — skip silently
+            // Malformed SSE line — skip
           }
         }
       }
+
       return finalOutput;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An error occurred during streaming.";
       setError(message);
       return "";
     } finally {
+      isLoadingRef.current = false;
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const reset = () => {
+  const reset = React.useCallback(() => {
     setOutput("");
     setIsLoading(false);
     setError(null);
-  };
+  }, []);
 
-  return { output, isLoading, error, run, reset, setOutput };
+  const stableSetOutput = React.useCallback((val: string | ((prev: string) => string)) => {
+    setOutput(val);
+  }, []);
+
+  return { output, isLoading, error, run, reset, setOutput: stableSetOutput };
 }

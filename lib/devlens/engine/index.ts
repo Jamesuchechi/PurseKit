@@ -134,6 +134,7 @@ export interface ExecutionLog {
   type: LogType;
   message: string;
   timestamp: Date;
+  isSimulation?: boolean;
 }
 
 /**

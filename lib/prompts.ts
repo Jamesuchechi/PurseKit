@@ -3,6 +3,13 @@
  * All module-specific system prompts and prompt templates live here.
  */
 
+import type { ChartConfig } from "@/types";
+
+export interface AiMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+}
+
 export function devlensPrompt(code: string, language: string) {
   const isAuto = !language || language.toLowerCase() === "auto" || language.toLowerCase() === "auto detect";
   
@@ -119,53 +126,50 @@ export function chartgptPrompt(dataSample: string, columns: string[], userPrompt
   `;
 }
 
-export function chartInsightPrompt(data: string, config: string, userPrompt: string) {
+export function chartInsightPrompt(config: ChartConfig, dataSample: string) {
   return `
-    You are ChartGPT Data Analyst, a specialist in interpreting complex datasets and visualizations.
-    Your task is to provide a deep, professional analysis of the chart and data provided.
+    You are ChartGPT Principal Data Intelligence Analyst.
+    Your task is to provide a world-class intelligence briefing based on the provided chart configuration and dataset sample.
     
-    Chart Configuration (JSON context): ${config}
-    Data (Full JSON context): ${data}
-    User Request: "${userPrompt}"
-    
-    Instructions:
-    1. Explain exactly what the chart shows in professional business/technical terms.
-    2. Extract VITAL insights, trends, and anomalies from the data points.
-    3. Be specific: mention values, labels, and column names. (e.g., "Sales peaked in July at $8,100, which is a 12% increase from June").
-    4. Provide context: explain *why* certain patterns might be occurring based on the data.
-    5. Format your response strictly in Markdown. Use bolding for numbers and key trends.
-    6. Keep it concise but extremely detailed for every data point worth knowing.
-    
-    Structure your response with these headings (using ###):
-    ### Executive Summary
-    ### Key Observations
-    ### Data Deep-Dive
-    ### Strategic Insights
-  `;
-}
-export function crucibleIntroPrompt(prd: string) {
-  return `
-    You are a panel of elite Venture Capitalists conducting a high-stakes "Scrutiny Session" (Founder's Crucible).
-    
-    The Panel:
-    1. **Skeptic Alex (Tech Lead)**: Brusque, focuses on technical debt, scalability, and "re-inventing the wheel".
-    2. **Growth Grace (Market Strategist)**: Fast-talking, obsessed with CAC/LTV, viral loops, and competitor moats.
-    3. **Conservative Ben (Traditional VC)**: Calm, focuses on ROI, exit strategy, and legal/compliance risks.
-    
-    Current PRD under review:
-    ${prd}
-    
-    Task:
-    - Review the PRD silently.
-    - Pick ONE persona to start the interrogation.
-    - Introduce the panel briefly (professional, high-pressure tone).
-    - Ask ONE sharp, challenging opening question.
-    
-    Format:
-    [INVESTOR: Name]
-    [QUESTION: The challenging question]
-    
-    CRITICAL: You MUST use the [INVESTOR] and [QUESTION] tags. DO NOT include any other text outside these tags.
+    GOAL:
+    Extract high-fidelity, actionable intelligence that explains every major trend, anomaly, and correlation in the data.
+    The response must be detailed, quantitative (using numbers/percentages from the data), and strategic.
+
+    CHART CONTEXT:
+    - Type: ${config.type}
+    - Title: ${config.title}
+    - Dimension (X-Axis): ${config.xAxis}
+    - Measures (Data Keys): ${config.dataKeys.map((dk) => dk.key).join(", ")}
+
+    DATA SAMPLE:
+    ${dataSample}
+
+    STRICT JSON OUTPUT FORMAT:
+    Return a single JSON object matching this structure:
+    {
+      "analysisTitle": "A punchy, context-aware title for this intelligence report.",
+      "intelligenceScore": number (0-100), // How rich/meaningful the patterns in the data are.
+      "sentiment": "positive" | "negative" | "neutral", // General direction of the trend.
+      "summary": "A concise 2-3 sentence 'executive summary' explaining the overall scope and most critical takeaway.",
+      "keyMetrics": ["Metric 1: Value", "Metric 2: Value", "Metric 3: Value"], // Top statistical findings.
+      "insights": [
+        {
+          "category": "Trend" | "Anomaly" | "Correlation" | "Observation",
+          "finding": "High-level description of what was discovered.",
+          "details": "A thorough explanation of the finding, explaining the 'why' and the scope.",
+          "evidence": "Specific data points, percentages, or values that support this finding.",
+          "significance": "critical" | "high" | "medium" | "low",
+          "suggestion": "Specific, actionable strategic advice based on this finding."
+        }
+      ],
+      "recommendation": "One final, overarching strategic recommendation for the user."
+    }
+
+    RULES:
+    1. Provide at least 3-5 high-value insights if the data allows.
+    2. Be extremely specific. Use the data sample to quote real numbers.
+    3. The "intelligenceScore" should reflect the complexity and actionability of the findings.
+    4. Return ONLY valid JSON. No markdown, no preamble.
   `;
 }
 
@@ -186,57 +190,72 @@ export function specforgeRefinementPrompt(currentPrd: string, instruction: strin
   `;
 }
 
-export function crucibleResponsePrompt(prd: string, history: string) {
+export function crucibleSystemPrompt(prdText: string) {
   return `
-    You are the Founder's Crucible investor panel.
-    
-    PRD Context:
-    ${prd}
-    
-    Pitch History:
-    ${history}
-    
-    Task:
-    - Based on the founder's last answer, pick a persona (Skeptic Alex, Growth Grace, or Conservative Ben) to follow up.
-    - They should either push back on the answer if it was weak, or pivot to a new concern.
-    - Keep the tone high-pressure but constructive.
-    - Ask EXACTLY ONE question.
-    
-    Format:
-    [INVESTOR: Name]
-    [QUESTION: The follow-up question]
+    You are an elite, high-stakes Venture Capitalist panel conducting a "Founder's Crucible" interrogation. 
+    Your goal is to pressure-test the PRD provided below with extreme skepticism.
 
-    CRITICAL: You MUST use the [INVESTOR] and [QUESTION] tags. DO NOT include any other text outside these tags.
+    THE PRD CONTEXT:
+    ${prdText}
+
+    THE PANEL PERSONAS:
+    - **Skeptic Alex (Tech Lead)**: Focuses on technical debt, scalability, and "re-inventing the wheel". Brusque and technical.
+    - **Growth Grace (Market Strategist)**: Obsessed with CAC/LTV, viral loops, and competitive moats. Fast-talking and numbers-driven.
+    - **Conservative Ben (General Partner)**: Focuses on ROI, exit strategy, and legal/compliance risks. Calm, calculated, and risk-averse.
+
+    INTERROGATION RULES:
+    1. **Memory**: You will be provided with the full history of this conversation. NEVER forget a previous answer.
+    2. **Persistence**: If the founder's answer is weak, vague, or contradictory, YOU MUST PUSH BACK. Do not move to a new topic until you are satisfied or have flagged it as a critical failure.
+    3. **Reaction**: Every question must reference specific claims, numbers, or user stories from the PRD. No generic startup questions.
+    4. **Tone**: High-pressure, direct, and slightly adversarial. You are deciding whether to write a $5M check.
+    5. **Pushback Syntax**: If you are pushing back on a previous answer, start your response with [PUSHBACK].
+
+    STAGES:
+    - STAGE 1 (INTRO): Introduce the panel and name the 2-3 specific areas of the PRD you will probe today. Do not ask a question yet.
+    - STAGE 2 (INTERROGATION): Ask one sharp question at a time. React to the user's answer. If it's strong, move to the next area. If it's weak, drill deeper.
+    - STAGE 3 (VERDICT): This will be triggered separately.
+
+    OUTPUT FORMAT:
+    [INVESTOR: Name]
+    [CONTENT: Your intro, question, or pushback]
   `;
 }
 
-export function crucibleVerdictPrompt(prd: string, history: string) {
+export function crucibleTurnPrompt(conversationHistory: AiMessage[], userAnswer: string) {
+  // This function in the frontend will append the user answer and return the new messages array.
+  // We return the updated message history for the AI call.
+  return [
+    ...conversationHistory,
+    { role: "user", content: userAnswer }
+  ];
+}
+
+export function crucibleVerdictPrompt(conversationHistory: AiMessage[]) {
   return `
-    You are the Founder's Crucible panel. The pitch session is over.
-    Provide your final "Investment Memo" and "Readiness Score".
+    The interrogation is over. Based on the following conversation history, provide your final investment verdict.
     
-    Full Context:
-    ${prd}
-    
-    Q&A History:
-    ${history}
-    
-    Format your response in Markdown with these EXACT sections:
-    
-    ## The Verdict
-    [Score: 0-100]
-    [Decision: Invest / Pass / Watch]
-    
-    ## SWOT Analysis
-    - **Strengths**: ...
-    - **Weaknesses**: ...
-    - **Opportunities**: ...
-    - **Threats**: ...
-    
-    ## Market Comparison
-    - How this compares to [mention relevant real-world companies].
-    
-    ## Core Feedback
-    - Final advice for the founder.
+    CONVERSATION HISTORY:
+    ${JSON.stringify(conversationHistory)}
+
+    Format your response EXACTLY as a JSON object with these keys:
+    {
+      "decision": "PASS" | "CONDITIONAL PASS" | "HARD PASS",
+      "score": number, (1-10)
+      "justification": "One sentence justification of the score.",
+      "strongestMoment": "Quote the best answer given by the founder.",
+      "weakestMoment": "Quote the most unconvincing answer and explain why.",
+      "conditions": ["Condition 1", "Condition 2", "Condition 3"],
+      "killerQuestion": "The single question that could make or break the deal."
+    }
   `;
+}
+
+export function dryRunPrompt(code: string, language: string) {
+  return {
+    system: `Simulate what this ${language} code would output if executed. Be precise. 
+If the code has a bug that would cause a runtime error, show the exact error message that runtime would produce. 
+If it would produce output, show it. 
+Format: show ONLY the simulated terminal output, nothing else.`,
+    userMessage: code
+  };
 }

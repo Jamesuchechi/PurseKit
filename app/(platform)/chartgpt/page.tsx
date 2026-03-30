@@ -35,7 +35,7 @@ function ChartGPTContent() {
   const { addNotification } = useNotifications();
   const { updateContext } = useModuleContext();
 
-  const { output: insight, isLoading: isInsightLoading, run: runInsight, reset: resetInsight, setOutput: setInsight } = useAiStream();
+  const { output: insight, isLoading: isInsightLoading, error: insightError, run: runInsight, reset: resetInsight, setOutput: setInsight } = useAiStream();
 
   const [step, setStep] = React.useState<"upload" | "preview" | "visualize">("upload");
   const [configError, setConfigError] = React.useState<string | null>(null);
@@ -43,6 +43,13 @@ function ChartGPTContent() {
   const [prompt, setPrompt] = React.useState("");
 
   const lastAnalyzedConfigRef = React.useRef<string>("");
+  const isDirtyRef = React.useRef(false);
+  const isMountedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
 
   // Load from search params (History)
   React.useEffect(() => {
@@ -73,7 +80,9 @@ function ChartGPTContent() {
 
   // Reactive Insight Updates
   React.useEffect(() => {
-    if (step !== "visualize" || !editableConfig || !parsedData || isAnalyzing) return;
+    // 1. Audit current trigger condition:
+    // Only fire if: visualized, dirty (user edit), mounted, not analyzing, and config changed.
+    if (step !== "visualize" || !editableConfig || !parsedData || isAnalyzing || !isDirtyRef.current || !isMountedRef.current) return;
 
     const currentStructuralConfig = JSON.stringify({
       type: editableConfig.type,
@@ -85,14 +94,28 @@ function ChartGPTContent() {
     if (currentStructuralConfig === lastAnalyzedConfigRef.current) return;
 
     const timer = setTimeout(() => {
-      const insightPrompt = chartInsightPrompt(
-        JSON.stringify(parsedData.data.slice(0, 50)), 
-        JSON.stringify(editableConfig), 
-        prompt
-      );
+      // 3. Fix dataset size handling: First 100 + Last 100 + 10 random middle
+      const rawData = parsedData.data;
+      let sampleData: Record<string, unknown>[] = [];
+      
+      if (rawData.length <= 500) {
+        // "Never pass the full dataset regardless of size"
+        sampleData = rawData.slice(0, Math.min(rawData.length - 1, 210));
+      } else {
+        const first100 = rawData.slice(0, 100);
+        const last100 = rawData.slice(-100);
+        // Take 10 random indices from the middle zone
+        const middleRange = rawData.length - 200;
+        const middleIndices = Array.from({ length: 10 }, () => Math.floor(Math.random() * middleRange) + 100);
+        const middleSample = middleIndices.sort((a, b) => a - b).map(idx => rawData[idx]);
+        sampleData = [...first100, ...middleSample, ...last100];
+      }
+
+      const insightPrompt = chartInsightPrompt(editableConfig, JSON.stringify(sampleData));
       
       runInsight(insightPrompt).then((finalInsight) => {
         lastAnalyzedConfigRef.current = currentStructuralConfig;
+        isDirtyRef.current = false; // Reset dirty flag after successful regeneration
         
         // Update history with new insight
         history.save({
@@ -101,7 +124,7 @@ function ChartGPTContent() {
           result: { config: editableConfig, data: parsedData, insight: finalInsight },
         });
       });
-    }, 1500);
+    }, 800); // 2. Fix debounce to 800ms
 
     return () => clearTimeout(timer);
   }, [editableConfig, step, parsedData, prompt, runInsight, isAnalyzing, history]);
@@ -132,9 +155,15 @@ function ChartGPTContent() {
 
         setStep("visualize");
 
-        // Trigger AI Insight Analysis
-        const insightPrompt = chartInsightPrompt(JSON.stringify(parsedData.data.slice(0, 50)), JSON.stringify(config), p);
+        // Trigger AI Insight Analysis with sampling
+        const rawData = parsedData.data;
+        const sampleData = rawData.length > 500 
+          ? [...rawData.slice(0, 100), ...rawData.slice(-100)] // Simple initial sample for speed
+          : rawData.slice(0, Math.min(rawData.length - 1, 210));
+
+        const insightPrompt = chartInsightPrompt(config, JSON.stringify(sampleData));
         runInsight(insightPrompt).then((finalInsight) => {
+          isDirtyRef.current = false; // Initial generation is not a "dirty" edit
           history.save({
             title: config.title || p,
             input: p,
@@ -312,7 +341,10 @@ Aug,7800,4900,225,South`;
                       <ChartConfigEditor 
                         config={editableConfig} 
                         columns={parsedData.columns} 
-                        onChange={setEditableConfig} 
+                        onChange={(newConfig) => {
+                          setEditableConfig(newConfig);
+                          isDirtyRef.current = true;
+                        }} 
                       />
                     </div>
                     <div className="lg:col-span-9 space-y-8 min-w-0">
@@ -321,7 +353,18 @@ Aug,7800,4900,225,South`;
                         data={parsedData.data}
                         onReset={() => setStep("preview")}
                       />
-                      <ChartInsight insight={insight} isLoading={isInsightLoading} />
+                      <ChartInsight 
+                        insight={insight} 
+                        isLoading={isInsightLoading} 
+                        error={insightError || undefined}
+                        totalRows={parsedData.data.length}
+                        onRetry={() => {
+                          isDirtyRef.current = true;
+                          // Force re-analysis by slightly updating the structural config reference
+                          // or just reset and re-calculate
+                          lastAnalyzedConfigRef.current = ""; 
+                        }}
+                      />
                     </div>
                   </div>
                 </motion.div>

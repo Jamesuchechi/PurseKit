@@ -8,7 +8,7 @@ import { CodeInput } from "@/components/devlens/CodeInput";
 import { LanguageSelector } from "@/components/devlens/LanguageSelector";
 import { AnalysisOutput } from "@/components/devlens/AnalysisOutput";
 import { useAiStream } from "@/hooks/useAiStream";
-import { devlensPrompt } from "@/lib/prompts";
+import { devlensPrompt, dryRunPrompt } from "@/lib/prompts";
 import { useHistory } from "@/hooks/useHistory";
 import { useDebounce } from "@/hooks/useDebounce";
 import { downloadFile, truncate } from "@/lib/utils";
@@ -61,6 +61,7 @@ function DevLensContent() {
   const [previewHtml, setPreviewHtml] = React.useState("");
   const [isRunning, setIsRunning] = React.useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = React.useState(false);
+  const [executionMode, setExecutionMode] = React.useState<'live' | 'simulation' | null>(null);
 
   // Load from search params (History)
   React.useEffect(() => {
@@ -136,6 +137,7 @@ function DevLensContent() {
     setStep("input");
     setLogs([]);
     setPreviewHtml("");
+    setExecutionMode(null);
   };
 
   const handleSample = () => {
@@ -168,17 +170,24 @@ function DevLensContent() {
       effectiveLang = detectCodeLanguage(code);
       addLog({ type: "system", message: `Auto-detected language: ${effectiveLang.toUpperCase()}`, timestamp });
     } else {
-      addLog({ type: "system", message: `Executing ${language} snippet...`, timestamp });
+      addLog({ type: "system", message: `Preparing ${language} snippet...`, timestamp });
     }
-    if (effectiveLang === "python") {
-      await executePython(code, addLog);
-    } else if (effectiveLang === "html") {
-      setActiveTab("preview");
-      setPreviewHtml(code);
-      addLog({ type: "system", message: "HTML Preview rendered.", timestamp: new Date() });
-    } else if (effectiveLang === "css") {
-      setActiveTab("preview");
-      const template = `
+
+    const TIER1 = ["javascript", "typescript", "python", "html", "css", "jsx", "tsx", "react"];
+    const TIER2 = ["java", "rust", "go", "cpp", "c", "sql", "bash"];
+
+    if (TIER1.includes(effectiveLang)) {
+      setExecutionMode('live');
+      if (effectiveLang === "python") {
+        await executePython(code, addLog);
+      } else if (effectiveLang === "html") {
+        setActiveTab("preview");
+        setPreviewHtml(code);
+        addLog({ type: "system", message: "HTML Preview rendered.", timestamp: new Date() });
+      } else if (effectiveLang === "css") {
+        setActiveTab("preview");
+        // ... (large template code remains)
+        const template = `
         <!DOCTYPE html>
         <html>
           <head>
@@ -281,24 +290,24 @@ function DevLensContent() {
           </body>
         </html>
       `;
-      setPreviewHtml(template);
-      addLog({ type: "system", message: "CSS Preview rendered in sandbox.", timestamp: new Date() });
-    } else if (effectiveLang === "react" || effectiveLang === "tsx" || effectiveLang === "jsx") {
-      setActiveTab("preview");
-      const babel = await getBabel(addLog);
-      if (!babel) {
-        addLog({ type: "error", message: "Babel failed to load environment", timestamp: new Date() });
-        setIsRunning(false);
-        return;
-      }
+        setPreviewHtml(template);
+        addLog({ type: "system", message: "CSS Preview rendered in sandbox.", timestamp: new Date() });
+      } else if (effectiveLang === "react" || effectiveLang === "tsx" || effectiveLang === "jsx") {
+        setActiveTab("preview");
+        const babel = await getBabel(addLog);
+        if (!babel) {
+          addLog({ type: "error", message: "Babel failed to load environment", timestamp: new Date() });
+          setIsRunning(false);
+          return;
+        }
 
-      try {
-        const transpiled = babel.transform(code, {
-          presets: ["react", ["typescript", { isTSX: true, allExtensions: true }]],
-        }).code;
+        try {
+          const transpiled = babel.transform(code, {
+            presets: ["react", ["typescript", { isTSX: true, allExtensions: true }]],
+          }).code;
 
-        // Enhanced React preview template with robust root detection
-        const template = `
+          // Enhanced React preview template with robust root detection
+          const template = `
           <!DOCTYPE html>
           <html>
             <head>
@@ -387,16 +396,33 @@ function DevLensContent() {
             </body>
           </html>
         `;
-        setPreviewHtml(template);
-        addLog({ type: "system", message: "React Preview rendered.", timestamp: new Date() });
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        addLog({ type: "error", message: "Transpilation failed: " + message, timestamp: new Date() });
+          setPreviewHtml(template);
+          addLog({ type: "system", message: "React Preview rendered.", timestamp: new Date() });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          addLog({ type: "error", message: "Transpilation failed: " + message, timestamp: new Date() });
+        }
+      } else {
+        await executeJS(code, addLog);
       }
-    } else if (["java", "rust", "go", "cpp", "c", "sql", "bash"].includes(effectiveLang)) {
-       addLog({ type: "warn", message: `Live execution for ${effectiveLang.toUpperCase()} is currently unavailable in the browser environment.`, timestamp: new Date() });
-       addLog({ type: "system", message: "Try analyzing the code with DevLens instead to get deep-structural insights.", timestamp: new Date() });
+    } else if (TIER2.includes(effectiveLang)) {
+      setExecutionMode('simulation');
+      addLog({ type: "system", message: `Initiating AI Dry Run for ${effectiveLang.toUpperCase()}...`, timestamp: new Date() });
+      
+      const config = dryRunPrompt(code, effectiveLang);
+      const simulatedOutput = await run(config.userMessage, { systemPrompt: config.system });
+      
+      if (simulatedOutput) {
+        addLog({ 
+          type: "info", 
+          message: simulatedOutput, 
+          timestamp: new Date(),
+          isSimulation: true 
+        });
+        addLog({ type: "system", message: "AI Simulation complete.", timestamp: new Date() });
+      }
     } else {
+      setExecutionMode('live');
       // Default to JS/TS with a final sanity check
       const isDefinitelyNotJS = code.trim().startsWith("#include") || code.trim().startsWith("SELECT") || code.trim().startsWith("package ");
       
@@ -565,7 +591,7 @@ function DevLensContent() {
                   </div>
                 )}
                 {activeTab === "console" && (
-                  <OutputConsole logs={logs} onClear={handleClearLogs} />
+                  <OutputConsole logs={logs} onClear={handleClearLogs} executionMode={executionMode} />
                 )}
                 {activeTab === "preview" && (
                   <PreviewFrame 
