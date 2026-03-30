@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { HelpCircle, Plus, Minus } from "lucide-react";
+import Link from "next/link";
 
 const faqs = [
   {
@@ -128,13 +129,13 @@ export default function FAQSection() {
           className="mt-12 text-center"
         >
           <p className="text-muted mb-4">Still have questions?</p>
-          <a
+          <Link
             href="/contact"
             className="inline-flex items-center gap-2 text-accent font-bold hover:underline"
           >
             Contact Support
             <HelpCircle className="w-4 h-4" />
-          </a>
+          </Link>
         </motion.div>
       </div>
     </section>

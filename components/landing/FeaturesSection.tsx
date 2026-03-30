@@ -2,6 +2,7 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import Link from "next/link";
 import { 
   Zap, 
   Shield, 
@@ -155,15 +156,19 @@ export default function FeaturesSection() {
           className="mt-16 text-center"
         >
           <p className="text-muted mb-4">And that&apos;s just the beginning...</p>
-          <motion.a
+          <Link
             href="/features"
             className="inline-flex items-center gap-2 text-accent font-bold hover:gap-3 transition-all group"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
-            Explore all features
-            <GitBranch className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-          </motion.a>
+            <motion.span
+              className="flex items-center gap-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Explore all features
+              <GitBranch className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+            </motion.span>
+          </Link>
         </motion.div>
       </div>
     </section>
