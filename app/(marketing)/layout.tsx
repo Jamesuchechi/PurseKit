@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import ScrollProgress from "@/components/shared/ScrollProgress";
@@ -13,7 +14,9 @@ export default function MarketingLayout({
       <ScrollProgress />
       <Navbar />
       <MainLayout>{children}</MainLayout>
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </>
   );
 }

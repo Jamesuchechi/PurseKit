@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useParams, notFound } from "next/navigation";
 import { PrivacyContent } from "@/components/static/PrivacyContent";
 import { TermsContent } from "@/components/static/TermsContent";
@@ -41,8 +42,10 @@ export default function StaticPage() {
   }
 
   return (
-    <AdaptiveShell>
-      {content}
-    </AdaptiveShell>
+    <Suspense fallback={null}>
+      <AdaptiveShell>
+        {content}
+      </AdaptiveShell>
+    </Suspense>
   );
 }
