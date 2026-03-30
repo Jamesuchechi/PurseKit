@@ -53,7 +53,7 @@ const MODULE_DEFS = [
   },
 ] as const;
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [guestName, setGuestName] = React.useState("Builder");
   const { notifications } = useNotifications();
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -332,5 +332,17 @@ export default function DashboardPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent"></div>
+      </div>
+    }>
+      <DashboardContent />
+    </React.Suspense>
   );
 }

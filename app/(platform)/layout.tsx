@@ -182,7 +182,9 @@ function PlatformLayoutContent({
             className="flex-1 overflow-y-auto custom-scrollbar relative"
           >
             {children}
-            <Footer />
+            <React.Suspense>
+              <Footer />
+            </React.Suspense>
           </motion.main>
         </AnimatePresence>
       </div>

@@ -43,7 +43,7 @@ interface AnalyticsStats {
   efficiency: string;
 }
 
-export default function AnalyticsPage() {
+function AnalyticsContent() {
   const [data, setData] = React.useState<{
     activity: ActivityPoint[];
     distribution: DistributionPoint[];
@@ -321,5 +321,17 @@ export default function AnalyticsPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+export default function AnalyticsPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+      </div>
+    }>
+      <AnalyticsContent />
+    </React.Suspense>
   );
 }
