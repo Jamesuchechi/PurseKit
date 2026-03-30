@@ -1,12 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { Mail, MessageCircle, MapPin, Globe, Clock, Send, Laptop, HelpCircle, PhoneCall } from "lucide-react";
+import { 
+  Send, 
+  Laptop, PhoneCall, ArrowRight,
+  Sparkles, ShieldCheck, Globe, Clock,
+  Zap, MapPin, HelpCircle
+} from "lucide-react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/Button";
 import Link from "next/link";
+import { useAdaptiveLink } from "@/hooks/useAdaptiveLink";
 
 export function ContactContent() {
+  const { getAdaptiveHref } = useAdaptiveLink();
   const [formStatus, setFormStatus] = React.useState<"idle" | "sending" | "sent">("idle");
   const [formData, setFormData] = React.useState({
     name: "",
@@ -18,7 +24,6 @@ export function ContactContent() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus("sending");
-    // Simulate API call
     setTimeout(() => {
       setFormStatus("sent");
       setFormData({ name: "", email: "", subject: "support", message: "" });
@@ -30,188 +35,215 @@ export function ContactContent() {
     {
       title: "Technical Support",
       icon: Laptop,
-      description: "Need help with integration or encountering an issue?",
+      description: "Deep-dive integration help.",
       email: "support@pulsekit.ai",
-      color: "bg-blue-500/10 text-blue-500"
+      color: "text-blue-500",
+      bg: "bg-blue-500/10"
     },
     {
       title: "Sales & Enterprise",
-      icon: MessageCircle,
-      description: "Looking for team licenses or enterprise custom features?",
+      icon: Sparkles,
+      description: "Custom licensing & deployments.",
       email: "sales@pulsekit.ai",
-      color: "bg-emerald-500/10 text-emerald-500"
+      color: "text-rose-500",
+      bg: "bg-rose-500/10"
     },
     {
       title: "Security & Legal",
-      icon: Globe,
-      description: "Inquiries regarding data privacy or reporting vulnerabilities.",
+      icon: ShieldCheck,
+      description: "Trust & compliance inquiries.",
       email: "security@pulsekit.ai",
-      color: "bg-amber-500/10 text-amber-500"
+      color: "text-amber-500",
+      bg: "bg-amber-500/10"
     }
   ];
 
   return (
-    <div className="max-w-6xl mx-auto py-12 px-6">
+    <div className="max-w-7xl mx-auto px-6 py-20 pb-40">
+      {/* Hero */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-6 mb-20 text-center max-w-3xl mx-auto"
+        className="text-center space-y-12 mb-32"
       >
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold uppercase tracking-widest mb-4">
-          <PhoneCall className="w-3.5 h-3.5" />
-          Get in Touch
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-black uppercase tracking-[0.2em]">
+          <PhoneCall className="w-4 h-4" />
+          Transmission Center
         </div>
-        <h1 className="text-5xl md:text-6xl font-display font-black tracking-tight text-foreground leading-[1.1]">
-          We&apos;re here to <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/70">listen.</span>
+        <h1 className="text-6xl md:text-8xl font-display font-black tracking-tight text-foreground leading-[1.1]">
+           Establish a <br />
+           <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-rose-500 to-accent/70 italic">
+              connection.
+           </span>
         </h1>
-        <p className="text-muted text-lg font-medium">
-          Have a question, feedback, or a partnership idea? Reach out to the right team and we&apos;ll get back to you within 24 hours.
+        <p className="text-xl text-muted max-w-2xl mx-auto font-medium">
+           Our engineering and support teams are distributed globally, ensuring a response within one orbit (24 hours).
         </p>
       </motion.div>
 
-      <div className="grid lg:grid-cols-5 gap-12 items-start">
+      <div className="grid lg:grid-cols-12 gap-20 items-start">
         {/* Contact Form */}
-        <div className="lg:col-span-3">
-          <div className="bg-void/50 border border-border/50 backdrop-blur-3xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-8 opacity-[0.02] transform -rotate-12 scale-150">
+        <div className="lg:col-span-7">
+          <div className="relative p-12 md:p-16 rounded-[4rem] bg-void/50 border border-border/50 backdrop-blur-3xl shadow-2xl overflow-hidden group">
+             <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
                 <Send className="w-64 h-64 text-accent" />
              </div>
              
-             <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-8 flex items-center gap-3 text-foreground">
-                   <Mail className="w-6 h-6 text-accent" />
-                   Drop us a message
-                </h3>
+             <div className="relative z-10 space-y-12">
+                <div className="space-y-2">
+                   <h3 className="text-3xl font-black text-foreground tracking-tight">Initiate Inquiry</h3>
+                   <p className="text-muted font-medium">Describe your challenge or vision below.</p>
+                </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                   <div className="grid sm:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                         <label className="text-xs font-black uppercase tracking-widest text-muted ml-1">Full Name</label>
+                <form onSubmit={handleSubmit} className="space-y-8">
+                   <div className="grid sm:grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted ml-1">Identity</label>
                          <input 
                             required
                             value={formData.name}
                             onChange={e => setFormData({...formData, name: e.target.value})}
-                            type="text" 
-                            className="w-full bg-muted/20 border border-border rounded-2xl px-5 py-4 text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
+                            className="w-full bg-muted/20 border border-border/50 rounded-2xl px-6 py-5 text-foreground font-medium placeholder:text-muted/40 focus:ring-2 focus:ring-accent/20 focus:border-accent/50 transition-all outline-none"
                             placeholder="Alex Thorne"
                          />
                       </div>
-                      <div className="space-y-2">
-                         <label className="text-xs font-black uppercase tracking-widest text-muted ml-1">Work Email</label>
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted ml-1">Secure Email</label>
                          <input 
                             required
                             type="email" 
                             value={formData.email}
                             onChange={e => setFormData({...formData, email: e.target.value})}
-                            className="w-full bg-muted/20 border border-border rounded-2xl px-5 py-4 text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
+                            className="w-full bg-muted/20 border border-border/50 rounded-2xl px-6 py-5 text-foreground font-medium placeholder:text-muted/40 focus:ring-2 focus:ring-accent/20 focus:border-accent/50 transition-all outline-none"
                             placeholder="alex@company.com"
                          />
                       </div>
                    </div>
 
-                   <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted ml-1">Subject</label>
-                      <select 
-                        value={formData.subject}
-                        onChange={e => setFormData({...formData, subject: e.target.value})}
-                        className="w-full bg-muted/20 border border-border rounded-2xl px-5 py-4 text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all appearance-none cursor-pointer"
-                      >
-                         <option value="support">Technical Support</option>
-                         <option value="sales">Sales & Partnerships</option>
-                         <option value="billing">Billing Inquiry</option>
-                         <option value="other">Other</option>
-                      </select>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted ml-1">Mission Category</label>
+                      <div className="relative">
+                         <select 
+                           value={formData.subject}
+                           onChange={e => setFormData({...formData, subject: e.target.value})}
+                           className="w-full bg-muted/20 border border-border/50 rounded-2xl px-6 py-5 text-foreground font-medium focus:ring-2 focus:ring-accent/20 focus:border-accent/50 transition-all appearance-none cursor-pointer outline-none"
+                         >
+                            <option value="support">Technical Support</option>
+                            <option value="sales">Sales & Partnerships</option>
+                            <option value="billing">Billing Inquiry</option>
+                            <option value="other">Other</option>
+                         </select>
+                         <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <ArrowRight className="w-4 h-4 text-muted rotate-90" />
+                         </div>
+                      </div>
                    </div>
 
-                   <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted ml-1">How can we help?</label>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted ml-1">The Pulse</label>
                       <textarea 
                          required
-                         rows={4}
+                         rows={5}
                          value={formData.message}
                          onChange={e => setFormData({...formData, message: e.target.value})}
-                         className="w-full bg-muted/20 border border-border rounded-2xl px-5 py-4 text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all resize-none"
-                         placeholder="Describe your request in detail..."
+                         className="w-full bg-muted/20 border border-border/50 rounded-2xl px-6 py-5 text-foreground font-medium placeholder:text-muted/40 focus:ring-2 focus:ring-accent/20 focus:border-accent/50 transition-all outline-none resize-none"
+                         placeholder="Detail your requirements..."
                       />
                    </div>
 
-                   <Button 
+                   <button 
                      type="submit" 
-                     className="w-full h-14 rounded-2xl font-bold bg-accent text-white shadow-xl shadow-accent/20 hover:shadow-accent/40"
                      disabled={formStatus !== "idle"}
+                     className={`
+                        w-full h-16 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3
+                        ${formStatus === 'sent' ? 'bg-green-600 text-white shadow-green-600/20' : 'bg-foreground text-background hover:bg-accent hover:text-white shadow-xl shadow-black/10'}
+                     `}
                    >
                      {formStatus === "idle" && (
                         <>
-                          <Send className="w-5 h-5 mr-3" /> 
-                          Send Message
+                          Transmit Message
+                          <Send className="w-4 h-4" />
                         </>
                      )}
-                     {formStatus === "sending" && <div className="h-5 w-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
-                     {formStatus === "sent" && "Message Sent Successfully!"}
-                   </Button>
+                     {formStatus === "sending" && <Zap className="w-5 h-5 animate-pulse" />}
+                     {formStatus === "sent" && <ShieldCheck className="w-5 h-5" />}
+                   </button>
                 </form>
              </div>
           </div>
         </div>
 
         {/* Sidebar Info */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-5 space-y-12">
            <div className="space-y-6">
               {contactMethods.map((method) => (
-                 <div key={method.title} className="p-6 rounded-[2rem] bg-muted/10 border border-border/50 hover:bg-muted/20 transition-all group">
-                    <div className="flex items-center gap-4 mb-4">
-                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border border-current/10 ${method.color}`}>
-                          <method.icon className="w-6 h-6" />
-                       </div>
-                       <div>
-                          <h4 className="font-bold text-foreground text-lg">{method.title}</h4>
-                          <p className="text-xs text-muted font-medium mb-1">{method.description}</p>
-                       </div>
+                 <div key={method.title} className="p-8 rounded-[3rem] bg-muted/10 border border-border/50 hover:bg-muted/20 transition-all group flex items-start gap-6">
+                    <div className={`shrink-0 w-12 h-12 rounded-xl ${method.bg} border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                       <method.icon className={`w-6 h-6 ${method.color}`} />
                     </div>
-                    <a href={`mailto:${method.email}`} className="text-sm font-black text-accent group-hover:underline underline-offset-4">
-                       {method.email}
-                    </a>
+                    <div className="space-y-2">
+                       <h4 className="text-lg font-bold text-foreground">{method.title}</h4>
+                       <p className="text-xs text-muted font-medium pr-4">{method.description}</p>
+                       <a href={`mailto:${method.email}`} className="block text-sm font-black text-accent hover:underline pt-2">
+                          {method.email}
+                       </a>
+                    </div>
                  </div>
               ))}
            </div>
 
-           <div className="p-8 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 space-y-6">
-              <div className="flex items-center gap-4">
-                 <MapPin className="w-6 h-6 text-indigo-500" />
-                 <h4 className="font-bold text-foreground">Our Headquarters</h4>
+           <div className="p-10 rounded-[3rem] bg-accent/5 border border-accent/10 space-y-8 relative overflow-hidden">
+              <div className="relative z-10 space-y-6">
+                 <div className="flex items-center gap-4">
+                    <MapPin className="w-6 h-6 text-accent" />
+                    <h3 className="text-xl font-bold text-foreground">Global HQ</h3>
+                 </div>
+                 <p className="text-sm text-muted leading-relaxed font-medium italic">
+                    PulseKit Inc.<br />
+                    101 Tech Plaza, Suite 400<br />
+                    San Francisco, CA 94105
+                 </p>
+                 <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-accent/10">
+                    <div className="flex items-center gap-2">
+                       <Clock className="w-4 h-4 text-accent" />
+                       <span className="text-[10px] font-black uppercase text-muted tracking-widest">9-6 PST</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <Globe className="w-4 h-4 text-accent" />
+                       <span className="text-[10px] font-black uppercase text-muted tracking-widest">Distributed Support</span>
+                    </div>
+                 </div>
               </div>
-              <p className="text-sm text-muted leading-relaxed font-medium">
-                 PulseKit Inc.<br />
-                 101 Tech Plaza, Suite 400<br />
-                 San Francisco, CA 94105
-              </p>
-              <div className="flex items-center gap-6 pt-4 border-t border-indigo-500/10">
-                 <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-indigo-400" />
-                    <span className="text-[10px] font-black uppercase text-slate-500">Mon-Fri 9-6 PST</span>
-                 </div>
-                 <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-indigo-400" />
-                    <span className="text-[10px] font-black uppercase text-slate-500">Global Support</span>
-                 </div>
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
+                 <Globe className="w-40 h-40" />
               </div>
            </div>
         </div>
       </div>
       
-      <div className="mt-20 flex flex-col items-center gap-6 text-center">
-         <div className="h-12 w-px bg-gradient-to-b from-transparent to-accent/50 mb-4" />
-         <h4 className="text-2xl font-bold flex items-center gap-3">
-            <HelpCircle className="w-6 h-6 text-accent" />
-            Quick Answers
-         </h4>
-         <p className="text-muted max-w-lg mb-4">
-            Maybe the answer you&apos;re looking for is already in our documentation or help center.
-         </p>
-         <div className="flex gap-4">
-            <Link href="/docs" className="text-sm font-black text-accent hover:underline">Documentation</Link>
-            <span className="text-muted/30">•</span>
-            <Link href="/help" className="text-sm font-black text-accent hover:underline">Help Center</Link>
+      {/* Footer Support Links */}
+      <div className="mt-32 pt-20 border-t border-border/50 flex flex-col items-center gap-12 text-center">
+         <div className="space-y-4">
+            <h4 className="text-3xl font-black text-foreground tracking-tight">Rapid Resolution</h4>
+            <p className="text-muted font-medium max-w-lg mb-4">
+               Many answers are instantaneous within our technical documentation or help center.
+            </p>
+         </div>
+         <div className="flex flex-wrap justify-center gap-8">
+            {[
+               { label: "Documentation", href: "/docs" },
+               { label: "Help Center", href: "/help" },
+               { label: "API Reference", href: "/api-docs" },
+               { label: "Security Portal", href: "/security" }
+            ].map(l => (
+               <Link key={l.label} href={getAdaptiveHref(l.href)} className="text-xs font-black uppercase tracking-[0.2em] text-muted hover:text-accent transition-colors">
+                  {l.label}
+               </Link>
+            ))}
+         </div>
+         <div className="flex items-center gap-2 text-[10px] font-black text-muted/40 uppercase tracking-[0.3em]">
+            <HelpCircle className="w-3 h-3" />
+            <span>Support Version 4.2.0</span>
          </div>
       </div>
     </div>

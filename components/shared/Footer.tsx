@@ -9,7 +9,8 @@ import {
   Brain, FileText, BarChart3, Book, HelpCircle,
   Users, Briefcase, Code, MessageCircle
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useAdaptiveLink } from "@/hooks/useAdaptiveLink";
 
 const footerLinks = {
   product: [
@@ -49,20 +50,25 @@ export default function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const pathname = usePathname();
+  const { getAdaptiveHref, isAppView } = useAdaptiveLink();
 
-  // Determine if we are in app view context
-  const isAppView = 
-    pathname?.startsWith("/dashboard") || 
-    pathname?.startsWith("/devlens") || 
-    pathname?.startsWith("/specforge") || 
-    pathname?.startsWith("/chartgpt") || 
-    pathname?.startsWith("/analytics") || 
-    pathname?.startsWith("/notifications") || 
-    pathname?.startsWith("/settings");
+  // For initial entry from an app route, we want to ensure we're in app view.
+  // This handles the first click from /dashboard -> /about
+  const finalGetAdaptiveHref = useMemo(() => (slug: string) => {
+    const isAppPath = 
+      pathname?.startsWith("/dashboard") || 
+      pathname?.startsWith("/devlens") || 
+      pathname?.startsWith("/specforge") || 
+      pathname?.startsWith("/chartgpt") || 
+      pathname?.startsWith("/analytics") || 
+      pathname?.startsWith("/notifications") || 
+      pathname?.startsWith("/settings");
 
-  const getAdaptiveHref = (slug: string) => {
-    return isAppView ? `${slug}?view=app` : slug;
-  };
+    if (isAppPath || isAppView) {
+      return `${slug}${slug.includes('?') ? '&' : '?'}view=app`;
+    }
+    return slug;
+  }, [pathname, isAppView]);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,7 +183,7 @@ export default function Footer() {
                 return (
                   <li key={link.label}>
                     <Link
-                      href={getAdaptiveHref(link.href)}
+                      href={finalGetAdaptiveHref(link.href)}
                       className="group flex items-center gap-2 text-muted hover:text-foreground transition-colors text-sm"
                     >
                       <Icon className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -198,7 +204,7 @@ export default function Footer() {
                 return (
                   <li key={link.label}>
                     <Link
-                      href={getAdaptiveHref(link.href)}
+                      href={finalGetAdaptiveHref(link.href)}
                       className="group flex items-center gap-2 text-muted hover:text-foreground transition-colors text-sm"
                     >
                       <Icon className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -219,7 +225,7 @@ export default function Footer() {
                 return (
                   <li key={link.label}>
                     <Link
-                      href={getAdaptiveHref(link.href)}
+                      href={finalGetAdaptiveHref(link.href)}
                       className="group flex items-center gap-2 text-muted hover:text-foreground transition-colors text-sm"
                     >
                       <Icon className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
