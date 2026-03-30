@@ -8,7 +8,7 @@ import { CodeInput } from "@/components/devlens/CodeInput";
 import { LanguageSelector } from "@/components/devlens/LanguageSelector";
 import { AnalysisOutput } from "@/components/devlens/AnalysisOutput";
 import { useAiStream } from "@/hooks/useAiStream";
-import { devlensPrompt, dryRunPrompt } from "@/lib/prompts";
+import { devlensPrompt, devlensDraftingPrompt, dryRunPrompt } from "@/lib/prompts";
 import { useHistory } from "@/hooks/useHistory";
 import { useDebounce } from "@/hooks/useDebounce";
 import { downloadFile, truncate } from "@/lib/utils";
@@ -33,12 +33,17 @@ const SAMPLE_CODE = `function processData(input) {
     var query = "SELECT * FROM users WHERE id = " + items[i].id;
     db.execute(query);
     // slow loop
+    let start = Date.now();
     while(Date.now() < start + 100) {}
   }
   return true;
 }`;
 
 type Step = "input" | "result";
+
+function cn(...classes: (string | boolean | undefined | null)[]) {
+  return classes.filter(Boolean).join(" ");
+}
 
 function DevLensContent() {
   const [step, setStep] = React.useState<Step>("input");
@@ -55,6 +60,7 @@ function DevLensContent() {
   const [saveInitiated, setSaveInitiated] = React.useState(false);
   const debouncedCode = useDebounce(code, 1000);
   const [isReady, setIsReady] = React.useState(false);
+  const [isDrafting, setIsDrafting] = React.useState(false);
 
   // Terminal & Preview State
   const [activeTab, setActiveTab] = React.useState<TabType>("analysis");
@@ -91,7 +97,7 @@ function DevLensContent() {
             const systemPrompt = devlensPrompt(newCode, "auto");
             run(newCode, { systemPrompt });
             setStep("result");
-            setSaveInitiated(false); // Reset save state for new analysis
+            setSaveInitiated(false); 
 
             toast("Transferred context from SpecForge", "success");
             localStorage.removeItem("pulsekit_context_transfer");
@@ -142,13 +148,231 @@ function DevLensContent() {
     }
   }, [isLoading, output, error, saveInitiated, code, save, toast, addNotification]);
 
+  const handleRunCode = React.useCallback(async (customCode?: string) => {
+    const codeToExecute = typeof customCode === 'string' ? customCode : code;
+    if (!codeToExecute.trim()) return;
+    
+    setIsRunning(true);
+    setStep("result");
+    setActiveTab("console");
+    const timestamp = new Date();
+    const addLog = (log: ExecutionLog) => setLogs(prev => [...prev, log]);
+
+    let effectiveLang = language.toLowerCase();
+    if (effectiveLang === "auto") {
+      effectiveLang = detectCodeLanguage(codeToExecute);
+      addLog({ type: "system", message: `Auto-detected language: ${effectiveLang.toUpperCase()}`, timestamp });
+    } else {
+      addLog({ type: "system", message: `Preparing ${language} snippet...`, timestamp });
+    }
+
+    const TIER1 = ["javascript", "typescript", "python", "html", "css", "jsx", "tsx", "react"];
+    const TIER2 = ["java", "rust", "go", "cpp", "c", "sql", "bash"];
+
+    try {
+      if (TIER1.includes(effectiveLang)) {
+        setExecutionMode('live');
+        if (effectiveLang === "python") {
+          await executePython(codeToExecute, addLog);
+        } else if (effectiveLang === "html") {
+          setActiveTab("preview");
+          setPreviewHtml(codeToExecute);
+          addLog({ type: "system", message: "HTML Preview rendered.", timestamp: new Date() });
+        } else if (effectiveLang === "css") {
+          setActiveTab("preview");
+          const template = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8" />
+              <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+              <script src="https://cdn.tailwindcss.com"></script>
+              <style>
+                :root { --accent: #6366f1; }
+                body { 
+                  margin: 0; padding: 0; min-height: 100vh; 
+                  background: radial-gradient(at top left, #f8fafc 0%, #f1f5f9 100%); 
+                  font-family: 'Outfit', sans-serif; 
+                  color: #1e293b;
+                }
+                .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+                ${codeToExecute}
+              </style>
+            </head>
+            <body>
+              <div class="max-w-5xl mx-auto p-12 space-y-16">
+                <header class="text-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
+                  <div class="inline-block px-4 py-1.5 bg-indigo-500/10 text-indigo-600 rounded-full text-xs font-black uppercase tracking-[0.2em] mb-4">
+                    Visual Sandbox V2
+                  </div>
+                  <h1 class="text-6xl font-[900] text-slate-900 tracking-tighter leading-none">
+                    CSS <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Mastery</span>
+                  </h1>
+                  <p class="text-xl text-slate-500 font-medium max-w-2xl mx-auto">Your styles are applied to this isolated environment with premium typography and lighting.</p>
+                </header>
+
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div class="container p-12 glass rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] flex flex-col items-center text-center space-y-8 transition-all hover:scale-[1.02] duration-500">
+                    <div class="w-24 h-24 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-3xl rotate-6 shadow-2xl shadow-indigo-500/30 flex items-center justify-center text-white">
+                      <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+                    </div>
+                    <div class="space-y-3">
+                      <h2 class="text-3xl font-bold tracking-tight">Interactive Surface</h2>
+                      <p class="text-slate-500 leading-relaxed font-medium">Precision-crafted surface for testing layout, micro-interactions, and complex animations.</p>
+                    </div>
+                  </div>
+
+                  <div class="container p-12 glass rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] flex flex-col items-center text-center space-y-10 group">
+                    <div class="w-full flex justify-between items-center pb-6 border-b border-slate-200/50">
+                      <div class="flex gap-1.5">
+                        <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                      </div>
+                      <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Control Panel</div>
+                    </div>
+                    <div class="w-full space-y-6">
+                      <div class="h-3 w-1/2 bg-slate-200/50 rounded-full"></div>
+                      <div class="h-3 w-full bg-slate-200/50 rounded-full"></div>
+                      <div class="h-3 w-3/4 bg-slate-200/50 rounded-full"></div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </body>
+          </html>
+          `;
+          setPreviewHtml(template);
+          addLog({ type: "system", message: "CSS Styles applied to global manifest.", timestamp: new Date() });
+        } else if (["javascript", "typescript", "jsx", "tsx", "react"].includes(effectiveLang)) {
+          setActiveTab("preview");
+          const babel = await getBabel(addLog);
+          if (!babel) {
+            addLog({ type: "error", message: "Babel failed to load environment", timestamp: new Date() });
+            setIsRunning(false);
+            return;
+          }
+
+          try {
+            const transformed = babel.transform(codeToExecute, {
+              presets: ["react", ["typescript", { isTSX: true, allExtensions: true }]],
+            }).code;
+
+            const template = `
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <meta charset="UTF-8" />
+                <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+                <script src="https://cdn.tailwindcss.com"></script>
+                <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+                <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+                <style>
+                  :root { --accent: #6366f1; }
+                  body { 
+                    margin: 0; min-height: 100vh; background: #ffffff; 
+                    font-family: 'Outfit', sans-serif; display: flex; flex-direction: column; 
+                    color: #0f172a;
+                  }
+                  #root { flex: 1; display: flex; flex-direction: column; }
+                  .loading-shimmer {
+                    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+                    background-size: 200% 100%;
+                    animation: shimmer 1.5s infinite;
+                  }
+                  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+                </style>
+              </head>
+              <body>
+                <div id="root">
+                  <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:40px;">
+                     <div style="width:64px; height:64px; border-radius:16px; background:#f1f5f9; position:relative; overflow:hidden;">
+                        <div class="loading-shimmer" style="position:absolute; inset:0;"></div>
+                     </div>
+                     <div style="width:120px; height:12px; border-radius:6px; background:#f1f5f9; position:relative; overflow:hidden;">
+                        <div class="loading-shimmer" style="position:absolute; inset:0;"></div>
+                     </div>
+                  </div>
+                </div>
+                <script>
+                  (function() {
+                    const rootElement = document.getElementById('root');
+                    const Root = ReactDOM.createRoot(rootElement);
+                    try {
+                      let codeToRun = \`${transformed.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`;
+                      window.exports = {};
+                      window.module = { exports: window.exports };
+                      const script = document.createElement('script');
+                      script.text = codeToRun;
+                      document.body.appendChild(script);
+                      const possibleRoots = ['App', 'Default', 'Main', 'Page', 'Preview', 'Dashboard'];
+                      let ComponentToRender = null;
+                      if (window.exports && window.exports.default) { ComponentToRender = window.exports.default; } 
+                      else if (typeof App !== 'undefined') { ComponentToRender = App; } 
+                      else {
+                         for (const key in window) {
+                            if (key[0] === key[0]?.toUpperCase() && typeof window[key] === 'function' && !['React', 'ReactDOM'].includes(key)) {
+                               ComponentToRender = window[key];
+                               break;
+                            }
+                         }
+                      }
+                      if (ComponentToRender) { Root.render(React.createElement(ComponentToRender)); }
+                    } catch (e) {
+                      rootElement.innerHTML = \`<div style="color:#ef4444;padding:40px;font-family:monospace;background:#fef2f2;border-radius:24px;margin:20px;border:1px solid #fee2e2;">
+                          <h3 style="font-size:18px;font-weight:800;margin-bottom:12px;color:#991b1b;">Runtime Execution Error</h3>
+                          <pre style="font-size:12px;overflow-x:auto;padding:20px;background:#ffffff;border-radius:16px;border:1px solid #fee2e2;">\${e.stack || e.message}</pre>
+                      </div>\`;
+                    }
+                  })();
+                </script>
+              </body>
+            </html>
+            `;
+            setPreviewHtml(template);
+            addLog({ type: "system", message: "React Preview rendered.", timestamp: new Date() });
+            
+            // Also run logs
+            await executeJS(codeToExecute, addLog);
+          } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            addLog({ type: "error", message: "Execution failed: " + message, timestamp: new Date() });
+          }
+        }
+      } else if (TIER2.includes(effectiveLang)) {
+        setExecutionMode('simulation');
+        const { system, userMessage } = dryRunPrompt(codeToExecute, effectiveLang);
+        const simResult = await run(userMessage, { systemPrompt: system });
+        addLog({ type: "info", message: String(simResult || "Simulation complete."), timestamp, isSimulation: true });
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      addLog({ type: "error", message, timestamp });
+    } finally {
+      setIsRunning(false);
+    }
+  }, [code, language, run]);
+
+  // Auto-run if drafting
+  React.useEffect(() => {
+    if (!isLoading && isDrafting && output && step === "result") {
+      const codeMatch = output.match(/```(?:react|tsx|jsx|javascript|js|html|css)?\n([\s\S]*?)```/i);
+      if (codeMatch && codeMatch[1]) {
+        const extractedCode = codeMatch[1].trim();
+        setTimeout(() => {
+          if (output.toLowerCase().includes("react") || output.toLowerCase().includes("html") || output.toLowerCase().includes("css")) {
+            setActiveTab("preview");
+          }
+          handleRunCode(extractedCode);
+        }, 800);
+      }
+    }
+  }, [isLoading, isDrafting, output, step, handleRunCode]);
+
   const handleTransformToPrd = () => {
     if (!output) return;
-    
-    // Extract summary for context
     const summaryMatch = output.match(/### Summary\n([\s\S]*?)(?=###|$)/i);
     const summary = summaryMatch?.[1]?.trim() || "Analysis of source code";
-    
     const transfer = {
       source: "devlens",
       data: {
@@ -157,7 +381,6 @@ function DevLensContent() {
         originalCode: code
       }
     };
-    
     localStorage.setItem("pulsekit_context_transfer", JSON.stringify(transfer));
     router.push("/specforge?import=devlens");
   };
@@ -166,15 +389,15 @@ function DevLensContent() {
     if (!code.trim()) return;
     setSaveInitiated(false);
     setStep("result");
-    setActiveTab("analysis");
-    
-    // Fall back to auto if language is strictly empty somehow
-    const lang = language;
-    
-    const prompt = code;
-    const systemPrompt = devlensPrompt(code, lang);
-    
-    run(prompt, { systemPrompt });
+    if (isDrafting) {
+      setActiveTab("console");
+      const systemPrompt = devlensDraftingPrompt(code, language === "auto" ? undefined : language);
+      run(code, { systemPrompt });
+    } else {
+      setActiveTab("analysis");
+      const systemPrompt = devlensPrompt(code, language);
+      run(code, { systemPrompt });
+    }
   };
 
   const handleClear = () => {
@@ -201,255 +424,6 @@ function DevLensContent() {
     setStep("input");
   };
 
-  const handleRunCode = async () => {
-    if (!code.trim()) return;
-    
-    setIsRunning(true);
-    setStep("result");
-    setActiveTab("console");
-    const timestamp = new Date();
-    const addLog = (log: ExecutionLog) => setLogs(prev => [...prev, log]);
-
-    // Intelligent language detection if "auto"
-    let effectiveLang = language.toLowerCase();
-    if (effectiveLang === "auto") {
-      effectiveLang = detectCodeLanguage(code);
-      addLog({ type: "system", message: `Auto-detected language: ${effectiveLang.toUpperCase()}`, timestamp });
-    } else {
-      addLog({ type: "system", message: `Preparing ${language} snippet...`, timestamp });
-    }
-
-    const TIER1 = ["javascript", "typescript", "python", "html", "css", "jsx", "tsx", "react"];
-    const TIER2 = ["java", "rust", "go", "cpp", "c", "sql", "bash"];
-
-    if (TIER1.includes(effectiveLang)) {
-      setExecutionMode('live');
-      if (effectiveLang === "python") {
-        await executePython(code, addLog);
-      } else if (effectiveLang === "html") {
-        setActiveTab("preview");
-        setPreviewHtml(code);
-        addLog({ type: "system", message: "HTML Preview rendered.", timestamp: new Date() });
-      } else if (effectiveLang === "css") {
-        setActiveTab("preview");
-        const template = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8" />
-            <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-            <script src="https://cdn.tailwindcss.com"></script>
-            <style>
-              :root { --accent: #6366f1; }
-              body { 
-                margin: 0; padding: 0; min-height: 100vh; 
-                background: radial-gradient(at top left, #f8fafc 0%, #f1f5f9 100%); 
-                font-family: 'Outfit', sans-serif; 
-                color: #1e293b;
-              }
-              .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
-              ${code}
-            </style>
-          </head>
-          <body>
-            <div class="max-w-5xl mx-auto p-12 space-y-16">
-              <header class="text-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
-                <div class="inline-block px-4 py-1.5 bg-indigo-500/10 text-indigo-600 rounded-full text-xs font-black uppercase tracking-[0.2em] mb-4">
-                  Visual Sandbox V2
-                </div>
-                <h1 class="text-6xl font-[900] text-slate-900 tracking-tighter leading-none">
-                  CSS <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Mastery</span>
-                </h1>
-                <p class="text-xl text-slate-500 font-medium max-w-2xl mx-auto">Your styles are applied to this high-fidelity isolated environment with premium typography and lighting.</p>
-              </header>
-
-              <section class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div class="container p-12 glass rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] flex flex-col items-center text-center space-y-8 transition-all hover:scale-[1.02] duration-500">
-                  <div class="w-24 h-24 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-3xl rotate-6 shadow-2xl shadow-indigo-500/30 flex items-center justify-center text-white">
-                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
-                  </div>
-                  <div class="space-y-3">
-                    <h2 class="text-3xl font-bold tracking-tight">Interactive Surface</h2>
-                    <p class="text-slate-500 leading-relaxed font-medium">Precision-crafted surface for testing layout, micro-interactions, and complex animations.</p>
-                  </div>
-                  <div class="button-group flex gap-4">
-                    <button class="btn btn-primary px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all">Primary Action</button>
-                    <button class="btn btn-secondary px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all">Secondary</button>
-                  </div>
-                </div>
-
-                <div class="p-12 bg-slate-900 rounded-[3rem] shadow-[0_48px_80px_-20px_rgba(15,23,42,0.3)] flex flex-col justify-center space-y-8 text-white overflow-hidden relative group">
-                   <div class="absolute -top-12 -right-12 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] group-hover:bg-indigo-500/30 transition-colors duration-700"></div>
-                   <div class="absolute -bottom-12 -left-12 w-64 h-64 bg-violet-500/10 rounded-full blur-[80px]"></div>
-                   
-                   <div class="relative z-10 space-y-2">
-                      <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10 backdrop-blur-md">
-                           <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                        </div>
-                        <h2 class="text-2xl font-black uppercase tracking-widest text-white/90">Onyx Core</h2>
-                      </div>
-                      <p class="text-slate-400 text-lg leading-relaxed font-medium">Test dark-mode aesthetics, high-contrast ratios, and cinematic glow effects across your component library.</p>
-                   </div>
-                   <div class="flex items-center justify-between relative z-10 pt-4 border-t border-white/5">
-                      <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)] animate-pulse"></div>
-                        <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-500">System.Stable.Active</span>
-                      </div>
-                      <div class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono text-slate-400 tracking-tighter uppercase">
-                        V-Stream 8.1
-                      </div>
-                   </div>
-                </div>
-              </section>
-
-              <section class="bg-white rounded-[3rem] p-12 border border-slate-100 shadow-[0_4px_30px_rgba(0,0,0,0.02)] space-y-8 relative overflow-hidden">
-                 <div class="flex items-center justify-between relative z-10">
-                    <div class="space-y-2">
-                       <div class="h-8 w-64 bg-gradient-to-r from-slate-100 to-transparent rounded-xl"></div>
-                       <div class="h-4 w-40 bg-slate-50 rounded-lg"></div>
-                    </div>
-                    <div class="w-16 h-16 rounded-[2rem] bg-indigo-50 border border-indigo-100 flex items-center justify-center">
-                       <div class="w-8 h-8 rounded-full bg-indigo-200 animate-bounce"></div>
-                    </div>
-                 </div>
-                 <div class="grid grid-cols-3 gap-6 relative z-10">
-                    <div class="h-48 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 flex items-center justify-center group overflow-hidden">
-                       <div class="w-12 h-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transform translate-y-24 group-hover:translate-y-0 transition-all duration-500">
-                          <span class="text-xl font-bold text-slate-400">01</span>
-                       </div>
-                    </div>
-                    <div class="h-48 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 flex items-center justify-center group overflow-hidden">
-                       <div class="w-12 h-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transform translate-y-24 group-hover:translate-y-0 transition-all duration-500 delay-75">
-                          <span class="text-xl font-bold text-slate-400">02</span>
-                       </div>
-                    </div>
-                    <div class="h-48 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 flex items-center justify-center group overflow-hidden">
-                       <div class="w-12 h-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transform translate-y-24 group-hover:translate-y-0 transition-all duration-500 delay-150">
-                          <span class="text-xl font-bold text-slate-400">03</span>
-                       </div>
-                    </div>
-                 </div>
-              </section>
-            </div>
-          </body>
-        </html>
-      `;
-        setPreviewHtml(template);
-        addLog({ type: "system", message: "CSS Preview rendered in sandbox.", timestamp: new Date() });
-      } else if (effectiveLang === "react" || effectiveLang === "tsx" || effectiveLang === "jsx") {
-        setActiveTab("preview");
-        const babel = await getBabel(addLog);
-        if (!babel) {
-          addLog({ type: "error", message: "Babel failed to load environment", timestamp: new Date() });
-          setIsRunning(false);
-          return;
-        }
-
-        try {
-          const transpiled = babel.transform(code, {
-            presets: ["react", ["typescript", { isTSX: true, allExtensions: true }]],
-          }).code;
-
-          const template = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="UTF-8" />
-              <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-              <script src="https://cdn.tailwindcss.com"></script>
-              <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-              <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-              <style>
-                :root { --accent: #6366f1; }
-                body { 
-                  margin: 0; min-height: 100vh; background: #ffffff; 
-                  font-family: 'Outfit', sans-serif; display: flex; flex-direction: column; 
-                  color: #0f172a;
-                }
-                #root { flex: 1; display: flex; flex-direction: column; }
-                .loading-shimmer {
-                  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-                  background-size: 200% 100%;
-                  animation: shimmer 1.5s infinite;
-                }
-                @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-              </style>
-            </head>
-            <body>
-              <div id="root">
-                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:40px;">
-                   <div style="width:64px; height:64px; border-radius:16px; background:#f1f5f9; position:relative; overflow:hidden;">
-                      <div class="loading-shimmer" style="position:absolute; inset:0;"></div>
-                   </div>
-                   <div style="width:120px; height:12px; border-radius:6px; background:#f1f5f9; position:relative; overflow:hidden;">
-                      <div class="loading-shimmer" style="position:absolute; inset:0;"></div>
-                   </div>
-                </div>
-              </div>
-              <script>
-                (function() {
-                  const rootElement = document.getElementById('root');
-                  const Root = ReactDOM.createRoot(rootElement);
-                  try {
-                    let codeToRun = \`${transpiled.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`;
-                    window.exports = {};
-                    window.module = { exports: window.exports };
-                    const script = document.createElement('script');
-                    script.text = codeToRun;
-                    document.body.appendChild(script);
-                    const possibleRoots = ['App', 'Default', 'Main', 'Page', 'Preview', 'Dashboard'];
-                    let ComponentToRender = null;
-                    if (window.exports && window.exports.default) { ComponentToRender = window.exports.default; } 
-                    else if (typeof App !== 'undefined') { ComponentToRender = App; } 
-                    else {
-                       for (const key in window) {
-                          if (key[0] === key[0]?.toUpperCase() && typeof window[key] === 'function' && !['React', 'ReactDOM'].includes(key)) {
-                             ComponentToRender = window[key];
-                             break;
-                          }
-                       }
-                    }
-                    if (ComponentToRender) { Root.render(React.createElement(ComponentToRender)); }
-                  } catch (e) {
-                    rootElement.innerHTML = \`<div style="color:#ef4444;padding:40px;font-family:monospace;background:#fef2f2;border-radius:24px;margin:20px;border:1px solid #fee2e2;">
-                        <h3 style="font-size:18px;font-weight:800;margin-bottom:12px;color:#991b1b;">Runtime Execution Error</h3>
-                        <pre style="font-size:12px;overflow-x:auto;padding:20px;background:#ffffff;border-radius:16px;border:1px solid #fee2e2;">\${e.stack || e.message}</pre>
-                    </div>\`;
-                  }
-                })();
-              </script>
-            </body>
-          </html>
-        `;
-          setPreviewHtml(template);
-          addLog({ type: "system", message: "React Preview rendered.", timestamp: new Date() });
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : String(err);
-          addLog({ type: "error", message: "Transpilation failed: " + message, timestamp: new Date() });
-        }
-      } else {
-        await executeJS(code, addLog);
-      }
-    } else if (TIER2.includes(effectiveLang)) {
-      setExecutionMode('simulation');
-      addLog({ type: "system", message: `Initiating AI Dry Run for ${effectiveLang.toUpperCase()}...`, timestamp: new Date() });
-      
-      const config = dryRunPrompt(code, effectiveLang);
-      const simulatedOutput = await run(config.userMessage, { systemPrompt: config.system });
-      
-      if (simulatedOutput) {
-        addLog({ type: "info", message: simulatedOutput, timestamp: new Date(), isSimulation: true });
-        addLog({ type: "system", message: "AI Simulation complete.", timestamp: new Date() });
-      }
-    } else {
-      setExecutionMode('live');
-      await executeJS(code, addLog);
-    }
-    
-    setIsRunning(false);
-  };
-
   const handleClearLogs = () => setLogs([]);
 
   useGlobalActions({
@@ -467,7 +441,7 @@ function DevLensContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.4 }}
             className="w-full space-y-8"
           >
             <PageHeader 
@@ -485,8 +459,27 @@ function DevLensContent() {
                   <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
                   <span className="ml-2 text-xs font-mono text-muted-foreground uppercase tracking-widest">Active Editor</span>
                 </div>
-                <div className="w-[160px]">
-                  <LanguageSelector value={language} onChange={setLanguage} />
+                <div className="flex items-center gap-4">
+                  <div className="w-[160px]">
+                    <LanguageSelector value={language} onChange={setLanguage} />
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-accent/5 border border-accent/20 rounded-xl">
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest transition-colors", isDrafting ? "text-accent" : "text-muted")}>
+                      Drafting Mode
+                    </span>
+                    <button 
+                      onClick={() => setIsDrafting(!isDrafting)}
+                      className={cn(
+                        "w-8 h-4 rounded-full relative transition-colors focus:outline-none",
+                        isDrafting ? "bg-accent" : "bg-muted"
+                      )}
+                    >
+                      <motion.div 
+                        animate={{ x: isDrafting ? 18 : 2 }}
+                        className="absolute top-1 w-2 h-2 rounded-full bg-white"
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -508,11 +501,12 @@ function DevLensContent() {
                   <Button variant="secondary" size="sm" onClick={handleSample}>Sample</Button>
                   <div className="flex-1 sm:hidden" />
                   <div className="flex items-center gap-2">
-                    <Button onClick={handleRunCode} variant="outline" size="sm" disabled={!code.trim() || isRunning} className="gap-2 border-accent/20 text-accent hover:bg-accent/5">
+                    <Button onClick={() => handleRunCode()} variant="outline" size="sm" disabled={!code.trim() || isRunning} className="gap-2 border-accent/20 text-accent hover:bg-accent/5">
                       <Play className="h-4 w-4" /> Run
                     </Button>
-                    <Button onClick={handleAnalyze} disabled={!code.trim() || isLoading} className="shadow-lg shadow-accent/20">
-                      <Sparkles className="h-4 w-4 mr-2" /> Analyze
+                    <Button onClick={handleAnalyze} disabled={!code.trim() || isLoading} className={cn("shadow-lg shadow-accent/20", isDrafting && "bg-indigo-600 hover:bg-indigo-700")}>
+                      <Sparkles className="h-4 w-4 mr-2" /> 
+                      {isDrafting ? "Draft Project" : "Analyze"}
                     </Button>
                   </div>
                 </div>

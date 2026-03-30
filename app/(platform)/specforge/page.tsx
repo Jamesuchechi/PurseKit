@@ -1,17 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeft, BookOpen, RotateCcw, Sparkles, Zap, Skull, Code, ArrowRight } from "lucide-react";
+import { ArrowLeft, BookOpen, RotateCcw, Sparkles, Zap, Skull, Code, ArrowRight, Package } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FeatureInput } from "@/components/specforge/FeatureInput";
 import { PRDOutput } from "@/components/specforge/PRDOutput";
 import { ExportButton } from "@/components/specforge/ExportButton";
 import { CrucibleArena } from "@/components/specforge/CrucibleArena";
+import { BlueprintViewer } from "@/components/specforge/BlueprintViewer";
 import { useAiStream } from "@/hooks/useAiStream";
 import { 
   specforgePrompt, 
-  specforgeRefinementPrompt
+  specforgeRefinementPrompt,
+  specforgeBlueprintPrompt
 } from "@/lib/prompts";
 import { useHistory } from "@/hooks/useHistory";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -24,10 +26,11 @@ import { downloadFile } from "@/lib/utils";
 import { Suspense } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
 
-type Step = "input" | "generating" | "result" | "crucible";
+type Step = "input" | "generating" | "result" | "crucible" | "blueprint";
 
 function SpecForgeContent() {
   const [step, setStep] = React.useState<Step>("input");
+  const [blueprintOutput, setBlueprintOutput] = React.useState("");
   
   // Form State
   const [description, setDescription] = React.useState("");
@@ -211,6 +214,28 @@ function SpecForgeContent() {
     setStep("crucible");
   };
 
+  const handleGenerateBlueprint = async () => {
+    if (!output) return;
+    setBlueprintOutput("");
+    const prompt = specforgeBlueprintPrompt(output);
+    
+    // We use a secondary run or just direct setOutput for simplicity here, 
+    // but since we want to keep the PRD output visible in background or history, 
+    // we'll manage a separate stream or just transition.
+    setStep("blueprint");
+    
+    // Clear previous stream state to reuse useAiStream for blueprint
+    reset();
+    run("Generate the 5 files for my project blueprint suite.", { systemPrompt: prompt });
+  };
+
+  // Sync blueprint output from stream
+  React.useEffect(() => {
+    if (step === "blueprint") {
+      setBlueprintOutput(output);
+    }
+  }, [output, step]);
+
   useGlobalActions({
     onAnalyze: handleGenerate,
     onExport: handleExport,
@@ -269,6 +294,10 @@ function SpecForgeContent() {
                     Scaffold Project
                     <ArrowRight className="w-3 h-3" />
                   </Button>
+                  <Button onClick={handleGenerateBlueprint} variant="outline" size="sm" className="gap-2 shrink-0 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/5">
+                    <Zap className="w-4 h-4" />
+                    Blueprint Suite
+                  </Button>
                   <ExportButton content={output} title={truncate(description.split("\n")[0]?.trim() || "PRD", 30)} />
                   <Button variant="outline" size="sm" onClick={handleNewRequest} className="gap-2 shrink-0 border-border/50">
                     <RotateCcw className="w-4 h-4" />
@@ -310,7 +339,7 @@ function SpecForgeContent() {
             </div>
           )}
         </div>
-      ) : (
+      ) : step === "crucible" ? (
         <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
             <PageHeader 
               icon={Skull}
@@ -324,7 +353,21 @@ function SpecForgeContent() {
               onRestart={handleNewRequest}
             />
         </div>
-      )}
+      ) : step === "blueprint" ? (
+        <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
+            <PageHeader 
+              icon={Package}
+              label="Engineering Suite"
+              title="Project Scaffolding"
+              description="Generating your core project assets: Readme, Documentation, Architecture, Todo, and Setup."
+            />
+            
+            <BlueprintViewer 
+              rawBlueprint={blueprintOutput}
+              onBack={() => setStep("result")}
+            />
+        </div>
+      ) : null}
     </div>
   );
 }

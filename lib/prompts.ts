@@ -251,7 +251,72 @@ export function crucibleVerdictPrompt(conversationHistory: AiMessage[]) {
   `;
 }
 
+export function specforgeBlueprintPrompt(prd: string) {
+  return `
+    You are a principal systems architect. Your task is to transform the provided PRD into a comprehensive "Project Blueprint Suite".
+    
+    THE PRD:
+    ${prd}
+    
+    You MUST generate exactly 5 files formatted in Markdown.
+    Separate each file with a clear delimiter: [FILE: filename]
+    
+    Files to generate:
+    1. [FILE: README.md]: A high-fidelity project overview. Include project name, tagline, features, and a "Why this project?" section.
+    2. [FILE: Documentation.md]: Technical deep-dive. Explain the architecture choice, data flow logic (using Mermaid if helpful), and state management strategy.
+    3. [FILE: Architecture.md]: A dedicated system design document. Include a detailed Mermaid class diagram or system diagram and explain the interaction between components.
+    4. [FILE: Todo.md]: A prioritized, phase-based roadmap (Phase 1: Foundation, Phase 2: Core, Phase 3: Polish, Phase 4: Scale).
+    5. [FILE: Setup.md]: Comprehensive installation and environment guide. Include prerequisite versions and step-by-step shell commands.
+    
+    STRICT RULES:
+    - Be extremely detailed and professional.
+    - Each file must be self-contained and formatted as a Markdown document within its [FILE] tag.
+    - Use the PRD data (Data Schema, API Endpoints) to inform the documentation.
+  `;
+}
+
+export function devlensDraftingPrompt(description: string, techStack?: string) {
+  return `
+    You are a world-class senior full-stack engineer. 
+    Your task is to take a project description and generate a fully-functional "Working Draft" of the core implementation.
+    
+    User Description: "${description}"
+    ${techStack ? `Specified Tech Stack: ${techStack}` : "Preferred Stack: React + Tailwind CSS (premium aesthetics)"}
+    
+    STRICT REQUIREMENTS:
+    1. GENERATIVE CODE: Write the actual source code for the main entry point or core component.
+    2. VISUAL PREVIEW: Ensure the code is self-contained and optimized for a visual sandbox preview (e.g., uses Tailwind, lucide-react, and standard React hooks).
+    3. FOLDER MANIFEST: The very first part of your response MUST BE a "Project Manifest" wrapped in a \`\`\`yaml code block.
+       This manifest MUST detail the recommended folder structure and where every component/hook/lib file should live.
+    4. IN-FILE COMMENTS: Add clear comments within the code explaining the logic and how to expand it.
+    
+    Example Manifest Format:
+    \`\`\`yaml
+    project_structure:
+      root:
+        - README.md
+        - package.json
+      src:
+        components:
+          - Layout.tsx
+          - DashboardItem.tsx
+        hooks:
+          - useCustomHook.ts
+        lib:
+          - utils.ts
+    \`\`\`
+    
+    Output Format:
+    - First: The YAML Manifest.
+    - Second: The working source code (React/HTML/etc).
+    - Third: A brief "Scaffold's Note" on how to run this locally.
+    
+    BE BOLD. Build something visually stunning and technically sound.
+  `;
+}
+
 export function dryRunPrompt(code: string, language: string) {
+//...
   return {
     system: `Simulate what this ${language} code would output if executed. Be precise. 
 If the code has a bug that would cause a runtime error, show the exact error message that runtime would produce. 
