@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeft, BookOpen, RotateCcw, Sparkles, Zap, Skull } from "lucide-react";
+import { ArrowLeft, BookOpen, RotateCcw, Sparkles, Zap, Skull, Code, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FeatureInput } from "@/components/specforge/FeatureInput";
@@ -16,7 +16,7 @@ import {
 import { useHistory } from "@/hooks/useHistory";
 import { useDebounce } from "@/hooks/useDebounce";
 import { truncate } from "@/lib/utils";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { useModuleContext } from "@/context/ModuleContext";
 import { useGlobalActions } from "@/hooks/useGlobalActions";
@@ -39,6 +39,7 @@ function SpecForgeContent() {
   const [refinementQuery, setRefinementQuery] = React.useState("");
   
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { toast } = useToast();
   const { updateContext } = useModuleContext();
   const { output, isLoading, error, run, reset, setOutput } = useAiStream();
@@ -49,9 +50,11 @@ function SpecForgeContent() {
   const [isReady, setIsReady] = React.useState(false);
   const [saveInitiated, setSaveInitiated] = React.useState(false);
 
-  // Load from search params (History)
+  // Load from search params (History or Import)
   React.useEffect(() => {
     const id = searchParams.get("id");
+    const isImport = searchParams.get("import") === "devlens";
+
     if (id && isReady) {
       const item = items.find((i) => i.id === id);
       if (item) {
@@ -68,29 +71,48 @@ function SpecForgeContent() {
         setStep("result");
         setSaveInitiated(true);
       }
+    } else if (isImport && isReady) {
+      const transfer = localStorage.getItem("pulsekit_context_transfer");
+      if (transfer) {
+        try {
+          const { source, data } = JSON.parse(transfer);
+          if (source === "devlens") {
+            setDescription(`Feature: ${data.title}\n\nBased on code analysis: ${data.analysis}`);
+            setContext(`Original context from code analysis:\n${data.originalCode}`);
+            setAudience("Technical Engineer");
+            setScope("Medium feature");
+            toast("Transferred context from DevLens", "success");
+            localStorage.removeItem("pulsekit_context_transfer");
+          }
+        } catch (e) {
+          console.error("Failed to parse transfer context", e);
+        }
+      }
     }
-  }, [searchParams, items, isReady, setOutput]);
+  }, [searchParams, items, isReady, setOutput, toast]);
 
   // Hydrate from localStorage draft
   React.useEffect(() => {
     try {
-      const draftDesc = window.localStorage.getItem("specforge_draft_desc");
-      const draftContext = window.localStorage.getItem("specforge_draft_context");
-      if (draftDesc) setDescription(draftDesc);
-      if (draftContext) setContext(draftContext);
+      if (!searchParams.get("id") && searchParams.get("import") !== "devlens") {
+        const draftDesc = window.localStorage.getItem("specforge_draft_desc");
+        const draftContext = window.localStorage.getItem("specforge_draft_context");
+        if (draftDesc) setDescription(draftDesc);
+        if (draftContext) setContext(draftContext);
+      }
     } catch {}
     setIsReady(true);
-  }, []);
+  }, [searchParams]);
 
   // Save drafts to localStorage
   React.useEffect(() => {
-    if (isReady && debouncedDesc !== undefined) {
+    if (isReady && debouncedDesc !== undefined && !searchParams.get("id")) {
       window.localStorage.setItem("specforge_draft_desc", debouncedDesc);
     }
-    if (isReady && debouncedContext !== undefined) {
+    if (isReady && debouncedContext !== undefined && !searchParams.get("id")) {
       window.localStorage.setItem("specforge_draft_context", debouncedContext);
     }
-  }, [debouncedDesc, debouncedContext, isReady]);
+  }, [debouncedDesc, debouncedContext, isReady, searchParams]);
 
   // Handle stream state transitions
   React.useEffect(() => {
@@ -106,7 +128,6 @@ function SpecForgeContent() {
     if (!isLoading && output.length > 0 && !saveInitiated && !error && step === "result") {
       setSaveInitiated(true);
       
-      // Update context with final PRD for Chat
       updateContext("specforge", { description, audience, scope, context, output });
 
       setTimeout(() => {
@@ -132,12 +153,8 @@ function SpecForgeContent() {
   const handleGenerate = () => {
     if (!description.trim()) return;
     setSaveInitiated(false);
-    
     const promptConfig = specforgePrompt(description, audience, scope, context);
-
-    // Update context for Chat
     updateContext("specforge", { description, audience, scope, context });
-    
     run("Generate the PRD as instructed.", { systemPrompt: promptConfig });
   };
 
@@ -146,9 +163,21 @@ function SpecForgeContent() {
     setSaveInitiated(false);
     const instruction = refinementQuery;
     setRefinementQuery("");
-    
     const promptConfig = specforgeRefinementPrompt(output, instruction);
     run("Rewrite the PRD with the requested refinements.", { systemPrompt: promptConfig });
+  };
+
+  const handleScaffoldProject = () => {
+    if (!output) return;
+    const transfer = {
+      source: "specforge",
+      data: {
+        title: truncate(description.split("\n")[0]?.trim() || "Scaffolded Project", 40),
+        requirements: output
+      }
+    };
+    localStorage.setItem("pulsekit_context_transfer", JSON.stringify(transfer));
+    router.push("/devlens?import=specforge");
   };
 
   const handleBackToEdit = () => {
@@ -180,7 +209,7 @@ function SpecForgeContent() {
   });
 
   return (
-    <div className="container max-w-7xl mx-auto py-8 px-4">
+    <div className="container max-w-7xl mx-auto py-8 px-4 min-h-[calc(100vh-8rem)]">
       {step === "input" ? (
         <>
           <PageHeader 
@@ -223,11 +252,16 @@ function SpecForgeContent() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
               {output && !isLoading && (
                 <>
+                  <Button onClick={handleScaffoldProject} variant="outline" size="sm" className="gap-2 shrink-0 border-accent/20 text-accent hover:bg-accent/5">
+                    <Code className="w-4 h-4" />
+                    Scaffold Project
+                    <ArrowRight className="w-3 h-3" />
+                  </Button>
                   <ExportButton content={output} title={truncate(description.split("\n")[0]?.trim() || "PRD", 30)} />
-                  <Button variant="outline" size="sm" onClick={handleNewRequest} className="gap-2 shrink-0">
+                  <Button variant="outline" size="sm" onClick={handleNewRequest} className="gap-2 shrink-0 border-border/50">
                     <RotateCcw className="w-4 h-4" />
                     New 
                   </Button>
@@ -243,7 +277,6 @@ function SpecForgeContent() {
             />
           </div>
 
-          {/* Refinement Floating Bar */}
           {!isLoading && output && (
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 z-50 animate-in slide-in-from-bottom-8 fade-in duration-500">
                <Button onClick={handleEnterCrucible} className="rounded-full px-6 bg-void text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/10 shadow-xl group">
@@ -270,17 +303,17 @@ function SpecForgeContent() {
         </div>
       ) : (
         <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
-           <PageHeader 
+            <PageHeader 
               icon={Skull}
               label="The Pitch Arena"
               title="Founder's Crucible"
               description="A panel of 3 simulated Venture Capitalists will now pressure-test your idea. Be precise. Be bold."
             />
-           
-           <CrucibleArena 
+            
+            <CrucibleArena 
               prdText={output}
               onRestart={handleNewRequest}
-           />
+            />
         </div>
       )}
     </div>

@@ -21,6 +21,8 @@ import { getCookie, setCookie } from "@/lib/utils";
 import { useHistory } from "@/hooks/useHistory";
 import { useToast } from "@/components/ui/Toast";
 
+import { exportWorkspace, importWorkspace, type PulseWorkspace } from "@/lib/workspace";
+
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
@@ -28,6 +30,8 @@ export default function SettingsPage() {
   const [guestName, setGuestName] = React.useState("");
   const [aiProvider, setAiProvider] = React.useState("groq");
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const { clear: clearDevLens } = useHistory("devlens");
   const { clear: clearSpecForge } = useHistory("specforge");
@@ -66,6 +70,40 @@ export default function SettingsPage() {
       await clearChartGPT();
       toast("All history cleared", "success");
     }
+  };
+
+  const handleExport = () => {
+    setIsExporting(true);
+    exportWorkspace();
+    setTimeout(() => setIsExporting(false), 1000);
+    toast("Workspace exported as .pulse", "success");
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const workspace = JSON.parse(event.target?.result as string) as PulseWorkspace;
+        const success = importWorkspace(workspace);
+        if (success) {
+          toast("Workspace restored. Refreshing...", "success");
+          setTimeout(() => window.location.reload(), 1500);
+        } else {
+          toast("Failed to restore workspace", "error");
+        }
+      } catch (err) {
+        console.error("Invalid workspace file", err);
+        toast("Invalid .pulse workspace file", "error");
+      }
+    };
+    reader.readAsText(file);
   };
 
   const container = {
@@ -144,6 +182,62 @@ export default function SettingsPage() {
                       Save
                     </Button>
                   </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* Section: Workspace Management */}
+          <motion.div variants={item}>
+            <Card className="p-6 border-border/50 hover:border-emerald-500/20 transition-all bg-emerald-500/[0.02]">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <Cloud className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold">Workspace Portability</h2>
+                  <p className="text-xs text-muted font-medium mt-0.5">Backup or restore your entire PulseKit history locally.</p>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="p-6 border border-border/50 rounded-2xl bg-muted/10 space-y-4">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold">Backup Workspace</h3>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Download your current session history, AI analyses, and preferences into a .pulse file.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={handleExport}
+                    disabled={isExporting}
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/10"
+                  >
+                    {isExporting ? "Exporting..." : "Download .pulse File"}
+                  </Button>
+                </div>
+
+                <div className="p-6 border border-border/50 rounded-2xl bg-muted/10 space-y-4">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold">Restore Session</h3>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Restore data from a previously exported .pulse file. This will replace your current workspace.
+                    </p>
+                  </div>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept=".pulse" 
+                    onChange={handleFileChange}
+                  />
+                  <Button 
+                    variant="outline"
+                    onClick={handleImportClick}
+                    className="w-full border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/5"
+                  >
+                    Upload and Restore
+                  </Button>
                 </div>
               </div>
             </Card>
@@ -255,22 +349,6 @@ export default function SettingsPage() {
                 >
                   Clear Everything
                 </Button>
-              </div>
-            </Card>
-          </motion.div>
-
-          {/* Section: Cloud Integration (Mock for Realism) */}
-          <motion.div variants={item}>
-            <Card className="p-6 border-border/50 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-3">
-                <span className="px-2 py-1 rounded-md bg-accent/10 text-accent text-[8px] font-black uppercase">Coming Soon</span>
-              </div>
-              <div className="flex items-center gap-3 mb-6 opacity-40">
-                <Cloud className="w-5 h-5 text-accent" />
-                <h2 className="text-lg font-bold">Cloud Sync</h2>
-              </div>
-              <div className="flex items-center justify-center p-12 border-2 border-dashed border-border/50 rounded-2xl opacity-40">
-                <p className="text-xs font-bold text-muted uppercase tracking-[0.2em]">Work in Progress</p>
               </div>
             </Card>
           </motion.div>

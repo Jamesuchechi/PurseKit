@@ -3,9 +3,6 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  UserCircle,
-  TrendingUp,
-  AlertCircle,
   Send,
   History,
   AlertTriangle,
@@ -16,6 +13,8 @@ import {
   Quote,
   RotateCcw,
   Zap,
+  Cpu,
+  Eye,
   LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -52,28 +51,28 @@ type Stage = "INTRO" | "INTERROGATION" | "VERDICT";
 
 const INVESTORS = [
   {
-    name: "Skeptic Alex",
-    role: "Tech Lead",
-    icon: UserCircle,
-    color: "text-red-500",
-    bg: "bg-red-500/10",
-    border: "border-red-500/20",
+    name: "Marc",
+    role: "The VC",
+    icon: Zap,
+    color: "text-accent",
+    bg: "bg-accent/10",
+    border: "border-accent/20",
   },
   {
-    name: "Growth Grace",
-    role: "Market Analyst",
-    icon: TrendingUp,
-    color: "text-blue-500",
-    bg: "bg-blue-500/10",
-    border: "border-blue-500/20",
+    name: "Sarah",
+    role: "The Skeptic",
+    icon: Eye,
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
   },
   {
-    name: "Conservative Ben",
-    role: "General Partner",
-    icon: AlertCircle,
-    color: "text-amber-500",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    name: "Leo",
+    role: "The Engineer",
+    icon: Cpu,
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+    border: "border-violet-500/20",
   },
 ];
 
@@ -115,11 +114,6 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
   }, [prdText, run]);
 
   // ── Process AI output when streaming finishes ─────────────────────────────
-  // Key fixes:
-  //  1. Only run when isLoading flips to false AND output is non-empty.
-  //  2. isProcessingOutput guard prevents the same output chunk being
-  //     committed twice if React re-runs the effect (Strict Mode, etc).
-  //  3. stageRef instead of stage in deps — avoids stage changes re-triggering.
   React.useEffect(() => {
     if (isLoading || !output || isProcessingOutput.current) return;
 
@@ -132,7 +126,7 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
       const contentMatch = output.match(/\[CONTENT:\s*(.*?)\]/i);
       const isPushback = output.includes("[PUSHBACK]");
 
-      const investorName = investorMatch?.[1].trim() || "Skeptic Alex";
+      const investorName = investorMatch?.[1].trim() || "Marc";
       const content = contentMatch?.[1].trim() || output.replace(/\[.*?\]/g, "").trim();
 
       if (content) {
@@ -155,7 +149,6 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
         }
       }
     } else {
-      // VERDICT stage — parse JSON
       try {
         const json = JSON.parse(output.replace(/```json|```/g, "").trim());
         setVerdictState(json);
@@ -167,8 +160,6 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
 
     isProcessingOutput.current = false;
   }, [isLoading, output, setOutput]);
-  // NOTE: stageRef.current is intentionally NOT in deps — we use the ref so
-  // stage transitions don't re-trigger this effect and cause a second commit.
 
   // ── Send user message ─────────────────────────────────────────────────────
   const handleSend = async (e?: React.FormEvent) => {
@@ -311,19 +302,25 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
             >
               <div className="flex gap-1">
                 <span
-                  className="w-1 h-1 bg-accent rounded-full animate-bounce"
+                  className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce"
                   style={{ animationDelay: "0ms" }}
                 />
                 <span
-                  className="w-1 h-1 bg-accent rounded-full animate-bounce"
+                  className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce"
                   style={{ animationDelay: "150ms" }}
                 />
                 <span
-                  className="w-1 h-1 bg-accent rounded-full animate-bounce"
+                  className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce"
                   style={{ animationDelay: "300ms" }}
                 />
               </div>
-              <span className="uppercase tracking-widest text-[10px]">Deliberating...</span>
+              <span className="uppercase tracking-[0.2em] text-[8px] font-black">
+                {(() => {
+                  const match = output.match(/\[INVESTOR:\s*(.*?)\]/i);
+                  const name = match?.[1]?.trim();
+                  return name ? `${name} is interrogating...` : "The Panel is deliberating...";
+                })()}
+              </span>
             </motion.div>
           )}
         </AnimatePresence>

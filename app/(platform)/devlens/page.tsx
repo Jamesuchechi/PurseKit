@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeft, Download, History, Play, RotateCcw, Sparkles, Trash2, Wand2 } from "lucide-react";
+import { ArrowLeft, Download, Play, RotateCcw, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { CodeInput } from "@/components/devlens/CodeInput";
@@ -13,7 +13,7 @@ import { useHistory } from "@/hooks/useHistory";
 import { useDebounce } from "@/hooks/useDebounce";
 import { downloadFile, truncate } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useGlobalActions } from "@/hooks/useGlobalActions";
 import { Suspense } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -47,6 +47,7 @@ function DevLensContent() {
   const [errorLines, setErrorLines] = React.useState<number[]>([]);
   
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { toast } = useToast();
   const { output, isLoading, error, run, reset, setOutput } = useAiStream();
   const { items, save } = useHistory("devlens");
@@ -63,9 +64,11 @@ function DevLensContent() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = React.useState(false);
   const [executionMode, setExecutionMode] = React.useState<'live' | 'simulation' | null>(null);
 
-  // Load from search params (History)
+  // Load from search params (History or Import)
   React.useEffect(() => {
     const id = searchParams.get("id");
+    const isImport = searchParams.get("import") === "specforge";
+
     if (id && isReady) {
       const item = items.find((i) => i.id === id);
       if (item) {
@@ -74,8 +77,23 @@ function DevLensContent() {
         setSaveInitiated(true);
         setStep("result");
       }
+    } else if (isImport && isReady) {
+      const transfer = localStorage.getItem("pulsekit_context_transfer");
+      if (transfer) {
+        try {
+          const { source, data } = JSON.parse(transfer);
+          if (source === "specforge") {
+            setCode(`// Scaffolding from SpecForge PRD: ${data.title}\n\n${data.requirements || ""}`);
+            setLanguage("auto");
+            toast("Transferred context from SpecForge", "success");
+            localStorage.removeItem("pulsekit_context_transfer");
+          }
+        } catch (e) {
+          console.error("Failed to parse transfer context", e);
+        }
+      }
     }
-  }, [searchParams, items, isReady, setOutput]);
+  }, [searchParams, items, isReady, setOutput, toast]);
 
   React.useEffect(() => {
     try {
@@ -115,6 +133,26 @@ function DevLensContent() {
       }, 500);
     }
   }, [isLoading, output, error, saveInitiated, code, save, toast, addNotification]);
+
+  const handleTransformToPrd = () => {
+    if (!output) return;
+    
+    // Extract summary for context
+    const summaryMatch = output.match(/### Summary\n([\s\S]*?)(?=###|$)/i);
+    const summary = summaryMatch?.[1]?.trim() || "Analysis of source code";
+    
+    const transfer = {
+      source: "devlens",
+      data: {
+        title: truncate(code.split("\n")[0]?.trim() || "DevLens Analysis", 40),
+        analysis: summary,
+        originalCode: code
+      }
+    };
+    
+    localStorage.setItem("pulsekit_context_transfer", JSON.stringify(transfer));
+    router.push("/specforge?import=devlens");
+  };
 
   const handleAnalyze = () => {
     if (!code.trim()) return;
@@ -186,7 +224,6 @@ function DevLensContent() {
         addLog({ type: "system", message: "HTML Preview rendered.", timestamp: new Date() });
       } else if (effectiveLang === "css") {
         setActiveTab("preview");
-        // ... (large template code remains)
         const template = `
         <!DOCTYPE html>
         <html>
@@ -306,7 +343,6 @@ function DevLensContent() {
             presets: ["react", ["typescript", { isTSX: true, allExtensions: true }]],
           }).code;
 
-          // Enhanced React preview template with robust root detection
           const template = `
           <!DOCTYPE html>
           <html>
@@ -348,43 +384,25 @@ function DevLensContent() {
                   const rootElement = document.getElementById('root');
                   const Root = ReactDOM.createRoot(rootElement);
                   try {
-                    // Handle "export default" if present in transpiled code
                     let codeToRun = \`${transpiled.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`;
-                    
-                    // Simple polyfill for exports if the user used ES modules syntax that Babel left in
                     window.exports = {};
                     window.module = { exports: window.exports };
-                    
                     const script = document.createElement('script');
                     script.text = codeToRun;
                     document.body.appendChild(script);
-                    
-                    // Search for a likely root component
                     const possibleRoots = ['App', 'Default', 'Main', 'Page', 'Preview', 'Dashboard'];
                     let ComponentToRender = null;
-                    
-                    // Priority 1: Explicitly assigned to window.exports.default
-                    if (window.exports && window.exports.default) {
-                       ComponentToRender = window.exports.default;
-                    } 
-                    // Priority 2: Named App component
-                    else if (typeof App !== 'undefined') {
-                       ComponentToRender = App;
-                    } 
-                    // Priority 3: Any uppercase function in window
+                    if (window.exports && window.exports.default) { ComponentToRender = window.exports.default; } 
+                    else if (typeof App !== 'undefined') { ComponentToRender = App; } 
                     else {
                        for (const key in window) {
-                          if (key[0] === key[0]?.toUpperCase() && typeof window[key] === 'function' && 
-                              !['React', 'ReactDOM'].includes(key)) {
+                          if (key[0] === key[0]?.toUpperCase() && typeof window[key] === 'function' && !['React', 'ReactDOM'].includes(key)) {
                              ComponentToRender = window[key];
                              break;
                           }
                        }
                     }
-                    
-                    if (ComponentToRender) {
-                      Root.render(React.createElement(ComponentToRender));
-                    }
+                    if (ComponentToRender) { Root.render(React.createElement(ComponentToRender)); }
                   } catch (e) {
                     rootElement.innerHTML = \`<div style="color:#ef4444;padding:40px;font-family:monospace;background:#fef2f2;border-radius:24px;margin:20px;border:1px solid #fee2e2;">
                         <h3 style="font-size:18px;font-weight:800;margin-bottom:12px;color:#991b1b;">Runtime Execution Error</h3>
@@ -413,25 +431,12 @@ function DevLensContent() {
       const simulatedOutput = await run(config.userMessage, { systemPrompt: config.system });
       
       if (simulatedOutput) {
-        addLog({ 
-          type: "info", 
-          message: simulatedOutput, 
-          timestamp: new Date(),
-          isSimulation: true 
-        });
+        addLog({ type: "info", message: simulatedOutput, timestamp: new Date(), isSimulation: true });
         addLog({ type: "system", message: "AI Simulation complete.", timestamp: new Date() });
       }
     } else {
       setExecutionMode('live');
-      // Default to JS/TS with a final sanity check
-      const isDefinitelyNotJS = code.trim().startsWith("#include") || code.trim().startsWith("SELECT") || code.trim().startsWith("package ");
-      
-      if (isDefinitelyNotJS && effectiveLang === "auto") {
-        addLog({ type: "warn", message: "This snippet doesn't look like valid executable JavaScript. We've blocked execution to prevent errors.", timestamp: new Date() });
-        addLog({ type: "system", message: "Tip: Use the Analysis tab for deep language-specific insights.", timestamp: new Date() });
-      } else {
-        await executeJS(code, addLog);
-      }
+      await executeJS(code, addLog);
     }
     
     setIsRunning(false);
@@ -478,12 +483,7 @@ function DevLensContent() {
               </div>
 
               <div className="flex-1 p-2">
-                <CodeInput 
-                  value={code} 
-                  onChange={setCode} 
-                  errorLines={errorLines} 
-                  className="h-[400px] sm:h-[500px]" 
-                />
+                <CodeInput value={code} onChange={setCode} errorLines={errorLines} className="h-[400px] sm:h-[500px]" />
               </div>
 
               <div className="px-6 py-4 bg-muted/10 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -495,21 +495,16 @@ function DevLensContent() {
                 
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                   <Button variant="ghost" size="sm" onClick={handleClear} disabled={!code.trim()} className="hover:bg-red-500/10 hover:text-red-500">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Clear
+                    <Trash2 className="w-4 h-4 mr-2" /> Clear
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={handleSample}>
-                    Sample
-                  </Button>
+                  <Button variant="secondary" size="sm" onClick={handleSample}>Sample</Button>
                   <div className="flex-1 sm:hidden" />
                   <div className="flex items-center gap-2">
                     <Button onClick={handleRunCode} variant="outline" size="sm" disabled={!code.trim() || isRunning} className="gap-2 border-accent/20 text-accent hover:bg-accent/5">
-                      <Play className="h-4 w-4" />
-                      Run
+                      <Play className="h-4 w-4" /> Run
                     </Button>
                     <Button onClick={handleAnalyze} disabled={!code.trim() || isLoading} className="shadow-lg shadow-accent/20">
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Analyze
+                      <Sparkles className="h-4 w-4 mr-2" /> Analyze
                     </Button>
                   </div>
                 </div>
@@ -517,10 +512,9 @@ function DevLensContent() {
             </div>
 
             {error && (
-              <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
                 <p className="font-bold mb-1 flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                  Analysis Failed
+                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" /> Analysis Failed
                 </p>
                 <p>{error}</p>
               </div>
@@ -535,7 +529,6 @@ function DevLensContent() {
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="space-y-6"
           >
-            {/* STICKY ACTION HEADER */}
             <div className="sticky top-0 z-50 py-4 bg-background/80 backdrop-blur-2xl border-b border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
                <div className="flex items-center gap-4 w-full sm:w-auto">
                 <Button variant="ghost" size="sm" onClick={handleBackToEditor} className="group text-muted-foreground hover:text-foreground">
@@ -554,28 +547,16 @@ function DevLensContent() {
                    <Button variant="outline" size="sm" onClick={handleExport} className="gap-2 shrink-0 border-border/50">
                      <Download className="h-4 w-4" />
                      <span className="hidden sm:inline">Export MD</span>
-                     <span className="sm:hidden">Export</span>
                    </Button>
                  )}
                  <Button variant="outline" size="sm" onClick={handleClear} className="gap-2 shrink-0 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/5">
-                   <RotateCcw className="h-4 w-4" />
-                   New Code
-                 </Button>
-                 <div className="h-8 w-px bg-border/50 mx-1" />
-                 <Button variant="outline" size="sm" onClick={() => {}} className="gap-2 shrink-0 border-border/50">
-                    <History className="h-4 w-4" />
-                    <span className="hidden sm:inline">History</span>
+                   <RotateCcw className="h-4 w-4" /> New Code
                  </Button>
                </div>
             </div>
 
-            {/* FULL WIDTH RESULTS */}
             <div className="h-[calc(100vh-16rem)] min-h-[600px] flex flex-col">
-              <TerminalHub 
-                activeTab={activeTab} 
-                onTabChange={setActiveTab}
-                isStreaming={isLoading}
-              >
+              <TerminalHub activeTab={activeTab} onTabChange={setActiveTab} isStreaming={isLoading}>
                 {activeTab === "analysis" && (
                   <div className="h-full overflow-y-auto styled-scrollbar pr-2 pb-10">
                     <AnalysisOutput 
@@ -584,8 +565,9 @@ function DevLensContent() {
                       onApplyFix={(fixedCode) => {
                         setCode(fixedCode);
                         setStep("input");
-                        toast("Fix applied successfully", "success");
+                        toast("Fix applied", "success");
                       }}
+                      onTransformToPrd={handleTransformToPrd}
                       onErrorLinesFound={setErrorLines}
                     />
                   </div>
@@ -594,19 +576,12 @@ function DevLensContent() {
                   <OutputConsole logs={logs} onClear={handleClearLogs} executionMode={executionMode} />
                 )}
                 {activeTab === "preview" && (
-                  <PreviewFrame 
-                    html={previewHtml} 
-                    onExpand={() => setIsPreviewModalOpen(true)}
-                  />
+                  <PreviewFrame html={previewHtml} onExpand={() => setIsPreviewModalOpen(true)} />
                 )}
               </TerminalHub>
             </div>
 
-            <PreviewModal 
-              isOpen={isPreviewModalOpen} 
-              onClose={() => setIsPreviewModalOpen(false)} 
-              html={previewHtml} 
-            />
+            <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} html={previewHtml} />
           </motion.div>
         )}
       </AnimatePresence>

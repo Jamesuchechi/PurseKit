@@ -4,11 +4,12 @@ import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Sparkles, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Button } from "@/components/ui/Button";
 
 // The expected sections per devlensPrompt
 const SECTIONS = [
@@ -26,11 +27,19 @@ interface AnalysisOutputProps {
   markdown: string;
   isStreaming: boolean;
   onApplyFix?: (code: string) => void;
+  onTransformToPrd?: () => void;
   onErrorLinesFound?: (lines: number[]) => void;
   className?: string;
 }
 
-export function AnalysisOutput({ markdown, isStreaming, onApplyFix, onErrorLinesFound, className }: AnalysisOutputProps) {
+export function AnalysisOutput({ 
+  markdown, 
+  isStreaming, 
+  onApplyFix, 
+  onTransformToPrd,
+  onErrorLinesFound, 
+  className 
+}: AnalysisOutputProps) {
   // Parse sections dynamically
   const parsedSections = React.useMemo(() => {
     const result: Record<string, string> = {
@@ -98,6 +107,32 @@ export function AnalysisOutput({ markdown, isStreaming, onApplyFix, onErrorLines
 
   return (
     <div className={cn("space-y-4 flex flex-col items-center w-full", className)}>
+      {!isStreaming && onTransformToPrd && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full p-6 rounded-[2rem] bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border border-accent/20 flex flex-col sm:flex-row items-center justify-between gap-6 mb-2"
+        >
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="p-3 rounded-2xl bg-accent/20 border border-accent/30 shadow-lg shadow-accent/10">
+              <Sparkles className="w-6 h-6 text-accent" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-foreground">Transform into Specs</h4>
+              <p className="text-[11px] text-muted-foreground font-medium">Generate a comprehensive PRD based on this code analysis.</p>
+            </div>
+          </div>
+          <Button 
+            onClick={onTransformToPrd}
+            className="rounded-2xl gap-2 px-8 bg-accent hover:bg-accent/90 shadow-xl shadow-accent/20 transition-all hover:scale-105 active:scale-95 group"
+          >
+            <FileText className="w-4 h-4" />
+            Generate PRD
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </motion.div>
+      )}
+
       {SECTIONS.map((section) => {
         const content = parsedSections[section];
         // Don't show empty sections while streaming (or do show them to prove it's coming, but hiding looks cleaner)
