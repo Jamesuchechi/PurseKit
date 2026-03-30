@@ -83,8 +83,16 @@ function DevLensContent() {
         try {
           const { source, data } = JSON.parse(transfer);
           if (source === "specforge") {
-            setCode(`// Scaffolding from SpecForge PRD: ${data.title}\n\n${data.requirements || ""}`);
+            const newCode = `// Scaffolding from SpecForge PRD: ${data.title}\n\n${data.requirements || ""}`;
+            setCode(newCode);
             setLanguage("auto");
+            
+            // Auto-trigger analysis
+            const systemPrompt = devlensPrompt(newCode, "auto");
+            run(newCode, { systemPrompt });
+            setStep("result");
+            setSaveInitiated(false); // Reset save state for new analysis
+
             toast("Transferred context from SpecForge", "success");
             localStorage.removeItem("pulsekit_context_transfer");
           }
@@ -93,7 +101,7 @@ function DevLensContent() {
         }
       }
     }
-  }, [searchParams, items, isReady, setOutput, toast]);
+  }, [searchParams, items, isReady, setOutput, toast, run]);
 
   React.useEffect(() => {
     try {

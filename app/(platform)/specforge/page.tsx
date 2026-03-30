@@ -77,10 +77,19 @@ function SpecForgeContent() {
         try {
           const { source, data } = JSON.parse(transfer);
           if (source === "devlens") {
-            setDescription(`Feature: ${data.title}\n\nBased on code analysis: ${data.analysis}`);
-            setContext(`Original context from code analysis:\n${data.originalCode}`);
+            const desc = `Feature: ${data.title}\n\nBased on code analysis: ${data.analysis}`;
+            const ctx = `Original context from code analysis:\n${data.originalCode}`;
+            
+            setDescription(desc);
+            setContext(ctx);
             setAudience("Technical Engineer");
             setScope("Medium feature");
+            
+            // Auto-trigger generation
+            const promptConfig = specforgePrompt(desc, "Technical Engineer", "Medium feature", ctx);
+            updateContext("specforge", { description: desc, audience: "Technical Engineer", scope: "Medium feature", context: ctx });
+            run("Generate the PRD as instructed.", { systemPrompt: promptConfig });
+            
             toast("Transferred context from DevLens", "success");
             localStorage.removeItem("pulsekit_context_transfer");
           }
@@ -89,7 +98,7 @@ function SpecForgeContent() {
         }
       }
     }
-  }, [searchParams, items, isReady, setOutput, toast]);
+  }, [searchParams, items, isReady, setOutput, toast, run, updateContext]);
 
   // Hydrate from localStorage draft
   React.useEffect(() => {
