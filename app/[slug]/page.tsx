@@ -14,6 +14,7 @@ import { ApiDocsContent } from "@/components/static/ApiDocsContent";
 import { BlogContent } from "@/components/static/BlogContent";
 import { CommunityContent } from "@/components/static/CommunityContent";
 import { CookiesContent } from "@/components/static/CookiesContent";
+import { PricingContent } from "@/components/static/PricingContent";
 import { AdaptiveShell } from "@/components/shared/AdaptiveShell";
 
 const CONTENT_MAP: Record<string, React.ReactNode> = {
@@ -28,6 +29,7 @@ const CONTENT_MAP: Record<string, React.ReactNode> = {
   docs: <DocsContent />,
   help: <HelpContent />,
   'api-docs': <ApiDocsContent />,
+  pricing: <PricingContent />,
   community: <CommunityContent />,
 };
 
