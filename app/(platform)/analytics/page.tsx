@@ -20,7 +20,7 @@ import {
   ModuleDonutChart, 
   AnalyticsStatCard 
 } from "@/components/analytics/AnalyticsCharts";
-import { type HistoryItem } from "@/types";
+import { type HistoryItem, type Module } from "@/types";
 import { Button } from "@/components/ui/Button";
 
 interface ActivityPoint {
@@ -29,6 +29,8 @@ interface ActivityPoint {
   devlens: number;
   specforge: number;
   chartgpt: number;
+  ops: number;
+  docs: number;
 }
 
 interface DistributionPoint {
@@ -56,7 +58,7 @@ function AnalyticsContent() {
 
   React.useEffect(() => {
     const loadAndProcess = () => {
-      const modules = ["devlens", "specforge", "chartgpt"];
+      const modules: Module[] = ["devlens", "specforge", "chartgpt", "ops", "docs"];
       let allItems: HistoryItem[] = [];
 
       modules.forEach(m => {
@@ -78,6 +80,8 @@ function AnalyticsContent() {
         { name: "DevLens", value: allItems.filter(i => i.module === "devlens").length },
         { name: "SpecForge", value: allItems.filter(i => i.module === "specforge").length },
         { name: "ChartGPT", value: allItems.filter(i => i.module === "chartgpt").length },
+        { name: "PulseOps", value: allItems.filter(i => i.module === "ops").length },
+        { name: "PulseDocs", value: allItems.filter(i => i.module === "docs").length },
       ].filter(d => d.value > 0);
 
       // ─── 2. Activity (Last 14 Days) ───────────────────────────
@@ -87,7 +91,15 @@ function AnalyticsContent() {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
         const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        activityMap[dateStr] = { date: dateStr, total: 0, devlens: 0, specforge: 0, chartgpt: 0 };
+        activityMap[dateStr] = { 
+          date: dateStr, 
+          total: 0, 
+          devlens: 0, 
+          specforge: 0, 
+          chartgpt: 0,
+          ops: 0,
+          docs: 0 
+        };
       }
 
       allItems.forEach(item => {
@@ -222,7 +234,7 @@ function AnalyticsContent() {
               {data.distribution.map((d, i) => (
                 <div key={d.name} className="flex items-center justify-between p-3 rounded-2xl bg-muted/20 border border-border/10">
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ["#06b6d4", "#f59e0b", "#8b5cf6"][i] }} />
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ["#06b6d4", "#f59e0b", "#8b5cf6", "#10b981", "#6366f1"][i] }} />
                     <span className="text-xs font-bold">{d.name}</span>
                   </div>
                   <span className="text-xs text-muted tabular-nums">{d.value}</span>
