@@ -30,15 +30,34 @@ export function MermaidDiagram({ chart, isStreaming }: MermaidDiagramProps) {
       try {
         const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
         
-        // Auto-repair common AI mistakes
+        // Auto-repair common AI mistakes and PlantUML leaks
         let repairedChart = chart
+          .replace(/@startuml/g, "")
+          .replace(/@enduml/g, "")
           .replace(/\|>/g, "|")        
           .replace(/---\|/g, "-->|")
           .replace(/--\|/g, "-->|")
           .trim();
 
-        // Ensure chart has a header
-        if (!repairedChart.startsWith("graph ") && !repairedChart.startsWith("flowchart ")) {
+        // If it contains PlantUML actor/boundary/database and sequence arrows, convert to sequenceDiagram
+        const isSequence = repairedChart.includes("->>") || repairedChart.includes("->");
+        
+        if (isSequence && !repairedChart.startsWith("sequenceDiagram")) {
+          // Clean up PlantUML specific declarations
+          repairedChart = repairedChart
+            .replace(/actor\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+            .replace(/boundary\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+            .replace(/database\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+            .replace(/component\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+            .replace(/control\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+            .replace(/entity\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+            .replace(/(\w+)\s*->>\s*(\w+)\s*:\s*(.+)/g, '$1->>$2: $3');
+          
+          repairedChart = `sequenceDiagram\n${repairedChart}`;
+        }
+
+        // Ensure chart has a header if not already set
+        if (!repairedChart.startsWith("graph ") && !repairedChart.startsWith("flowchart ") && !repairedChart.startsWith("sequenceDiagram") && !repairedChart.startsWith("classDiagram") && !repairedChart.startsWith("stateDiagram") && !repairedChart.startsWith("erDiagram")) {
           repairedChart = `graph TD\n${repairedChart}`;
         }
 

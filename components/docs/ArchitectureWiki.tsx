@@ -27,8 +27,35 @@ export function ArchitectureWiki({ content, onDownload }: ArchitectureWikiProps)
       const blocks = containerRef.current?.querySelectorAll(".language-mermaid");
       if (blocks) {
         blocks.forEach(async (block, i) => {
-          const code = block.textContent || "";
+          let code = block.textContent || "";
           try {
+            // Auto-repair common AI mistakes and PlantUML leaks
+            code = code
+              .replace(/@startuml/g, "")
+              .replace(/@enduml/g, "")
+              .replace(/\|>/g, "|")
+              .replace(/---\|/g, "-->|")
+              .replace(/--\|/g, "-->|")
+              .trim();
+
+            const isSequence = code.includes("->>") || code.includes("->");
+            if (isSequence && !code.startsWith("sequenceDiagram")) {
+              code = code
+                .replace(/actor\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+                .replace(/boundary\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+                .replace(/database\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+                .replace(/component\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+                .replace(/control\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+                .replace(/entity\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+                .replace(/(\w+)\s*->>\s*(\w+)\s*:\s*(.+)/g, '$1->>$2: $3');
+              
+              code = `sequenceDiagram\n${code}`;
+            }
+
+            if (!code.startsWith("graph ") && !code.startsWith("flowchart ") && !code.startsWith("sequenceDiagram") && !code.startsWith("classDiagram") && !code.startsWith("stateDiagram") && !code.startsWith("erDiagram")) {
+              code = `graph TD\n${code}`;
+            }
+
             const { svg } = await mermaid.render(`mermaid-${i}`, code);
             const parent = block.parentElement;
             if (parent) {

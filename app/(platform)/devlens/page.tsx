@@ -149,7 +149,7 @@ function DevLensContent() {
     }
   }, [isLoading, output, error, saveInitiated, code, draftDescription, isDrafting, save, toast, addNotification]);
 
-  const handleRunCode = React.useCallback(async (customCode?: string) => {
+  const handleRunCode = React.useCallback(async (customCode?: string, forcedLang?: string) => {
     const codeToExecute = typeof customCode === 'string' ? customCode : code;
     if (!codeToExecute.trim()) return;
     
@@ -159,12 +159,12 @@ function DevLensContent() {
     const timestamp = new Date();
     const addLog = (log: ExecutionLog) => setLogs(prev => [...prev, log]);
 
-    let effectiveLang = language.toLowerCase();
+    let effectiveLang = forcedLang || language.toLowerCase();
     if (effectiveLang === "auto") {
       effectiveLang = detectCodeLanguage(codeToExecute);
       addLog({ type: "system", message: `Auto-detected language: ${effectiveLang.toUpperCase()}`, timestamp });
     } else {
-      addLog({ type: "system", message: `Preparing ${language} snippet...`, timestamp });
+      addLog({ type: "system", message: `Preparing ${effectiveLang} snippet...`, timestamp });
     }
 
     const TIER1 = ["javascript", "typescript", "python", "html", "css", "jsx", "tsx", "react"];
@@ -371,6 +371,16 @@ function DevLensContent() {
         
         setTimeout(() => {
           const ext = mainFile.name.split(".").pop()?.toLowerCase();
+          const langMap: Record<string, string> = {
+            'html': 'html',
+            'css': 'css',
+            'js': 'javascript',
+            'ts': 'typescript',
+            'tsx': 'tsx',
+            'jsx': 'jsx',
+            'py': 'python'
+          };
+          const detectedLang = langMap[ext || ""] || "auto";
           const isFrontend = ["tsx", "jsx", "html", "css", "js", "ts"].includes(ext || "");
           
           if (isFrontend) {
@@ -378,7 +388,24 @@ function DevLensContent() {
           } else {
             setActiveTab("console");
           }
-          handleRunCode(mainFile.content);
+
+          // Context Injection: If HTML, find CSS in the draft and inject it
+          let finalContent = mainFile.content;
+          if (detectedLang === "html") {
+            const cssFiles = files.filter(f => f.name.endsWith(".css"));
+            if (cssFiles.length > 0) {
+              const combinedCss = cssFiles.map(f => f.content).join("\n");
+              if (finalContent.includes("</head>")) {
+                finalContent = finalContent.replace("</head>", `<style>\n${combinedCss}\n</style>\n</head>`);
+              } else if (finalContent.includes("<body>")) {
+                finalContent = finalContent.replace("<body>", `<style>\n${combinedCss}\n</style>\n<body>`);
+              } else {
+                finalContent = `<style>\n${combinedCss}\n</style>\n` + finalContent;
+              }
+            }
+          }
+
+          handleRunCode(finalContent, detectedLang);
         }, 800);
       } else {
         // Fallback for single block if no [FILE] tags found
@@ -666,7 +693,33 @@ function DevLensContent() {
                         activeIndex={activeFileIndex} 
                         onSelect={(index) => {
                           setActiveFileIndex(index);
-                          handleRunCode(draftFiles[index].content);
+                          const selectedFile = draftFiles[index];
+                          const ext = selectedFile.name.split(".").pop()?.toLowerCase();
+                          const langMap: Record<string, string> = {
+                            'html': 'html',
+                            'css': 'css',
+                            'js': 'javascript',
+                            'ts': 'typescript',
+                            'tsx': 'tsx',
+                            'jsx': 'jsx',
+                            'py': 'python'
+                          };
+                          const detectedLang = langMap[ext || ""] || "auto";
+                          
+                          let finalContent = selectedFile.content;
+                          if (detectedLang === "html") {
+                            const cssFiles = draftFiles.filter(f => f.name.endsWith(".css"));
+                            if (cssFiles.length > 0) {
+                              const combinedCss = cssFiles.map(f => f.content).join("\n");
+                              if (finalContent.includes("</head>")) {
+                                finalContent = finalContent.replace("</head>", `<style>\n${combinedCss}\n</style>\n</head>`);
+                              } else {
+                                finalContent = `<style>\n${combinedCss}\n</style>\n` + finalContent;
+                              }
+                            }
+                          }
+
+                          handleRunCode(finalContent, detectedLang);
                         }}
                       />
                     )}

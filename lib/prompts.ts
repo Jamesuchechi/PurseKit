@@ -77,9 +77,13 @@ export function specforgePrompt(description: string, audience: string, scope: st
     2. Data Schema MUST be a Markdown table with columns: Model, Field, Type, Required, Description.
     3. API Endpoints MUST be a Markdown table with columns: Method, Path, Description, Request/Response payload summary.
     4. Provide actionable insights under Open Questions.
-    5. You MUST include at least one Mermaid flowchart representing the core system architecture or primary user flow. Wrap it in a \`\`\`mermaid code block, preferably inside the Overview section.
+    5. You MUST include at least one Mermaid flowchart representing the core system architecture or primary user flow. Wrap it in a \`\`\`mermaid code block.
     
-    IMPORTANT: Use only STANDARD directional links in your Mermaid diagrams (e.g., A --> B or A -->|label| B). DO NOT use non-directional links like ---|label|.
+    STRICT PROHIBITION:
+    - DO NOT use PlantUML syntax (e.g., @startuml, actor, boundary). 
+    - Ensure EVERY diagram is valid Mermaid.js.
+    
+    IMPORTANT: Use only STANDARD directional links in your Mermaid diagrams (e.g., A --> B). DO NOT use non-directional links like ---|label|.
     
     Ensure the PRD is structured, professional, and ready for development.
   `;
@@ -185,7 +189,10 @@ export function specforgeRefinementPrompt(currentPrd: string, instruction: strin
     Rewrite the entire PRD to incorporate these instructions. 
     You MUST include at least one Mermaid flowchart representing the core system architecture or primary user flow. Wrap it in a \`\`\`mermaid code block.
     
-    IMPORTANT: Use only STANDARD directional links in your Mermaid diagrams (e.g., A --> B or A -->|label| B). DO NOT use non-directional links like ---|label|.
+    STRICT PROHIBITION:
+    - DO NOT use PlantUML syntax (@startuml, @enduml, actor, boundary).
+    
+    IMPORTANT: Use only STANDARD directional links in your Mermaid diagrams (e.g., A --> B). DO NOT use non-directional links like ---|label|.
     Keep exactly the same structural headings (##). Make sure you apply the refinement correctly.
   `;
 }
@@ -366,6 +373,12 @@ export function pulseDocsPrompt(description: string, diagramType: string, contex
     
     STRICT REQUIREMENTS:
     1. VISUAL ARCHITECTURE: You MUST include at least two complex Mermaid.js diagrams (C4, Sequence, or Flowcharts) to explain the system logic perfectly.
+    
+    STRICT PROHIBITION:
+    - DO NOT use PlantUML syntax. 
+    - DO NOT use tags like @startuml or @enduml. 
+    - DO NOT use PlantUML keywords such as 'actor', 'boundary', 'control', 'entity', or 'database' in diagram definitions.
+    - Ensure EVERY diagram is valid Mermaid.js syntax (e.g., sequenceDiagram, flowchart TD, etc.).
     2. TECHNICAL DEPTH: Don't just list features. Explain the "Why" behind the architecture, data consistency models, and component interactions.
     3. STANDARDIZED FORMAT: Use high-fidelity Markdown with clear hierarchies.
     
