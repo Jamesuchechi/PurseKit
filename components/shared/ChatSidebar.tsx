@@ -29,6 +29,18 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [includeContext, setIncludeContext] = React.useState(true);
   const [input, setInput] = React.useState("");
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  
+  const moduleName = React.useMemo(() => {
+    const names: Record<string, string> = {
+      devlens: "DevLens",
+      specforge: "SpecForge",
+      chartgpt: "ChartGPT",
+      ops: "PulseOps",
+      docs: "PulseDocs",
+      home: "Universal",
+    };
+    return names[activeModule] || "Universal";
+  }, [activeModule]);
 
   const getSystemPrompt = React.useCallback(() => {
     let prompt = "You are Pulse Assistant, an AI expert in software engineering and data science. You are helpful, precise, and professional.";
@@ -42,6 +54,10 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
         prompt += "\n\nYou are acting as a Product Architect. Focus on user experience and technical feasibility.";
       } else if (activeModule === "chartgpt") {
         prompt += "\n\nYou are acting as a Data Analyst. Focus on statistical significance and visual storytelling.";
+      } else if (activeModule === "ops") {
+        prompt += "\n\nYou are acting as a Cloud Engineer. Focus on infrastructure scalability and operational efficiency.";
+      } else if (activeModule === "docs") {
+        prompt += "\n\nYou are acting as a Technical Writer. Focus on documentation clarity, structure, and developer experience.";
       }
     }
     
@@ -135,7 +151,7 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 <div className="flex items-center gap-2">
                   <Activity className="w-3.5 h-3.5 text-accent animate-pulse" />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Connected: {activeModule}
+                    Connected: {moduleName}
                   </span>
                 </div>
                 <button
@@ -177,7 +193,7 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                   <div>
                     <h4 className="font-display font-bold text-foreground text-lg">Ask Pulse Assistant</h4>
                     <p className="text-sm text-muted-foreground mt-2 max-w-[280px] leading-relaxed">
-                      I&apos;m your {activeModule !== "home" ? activeModule : "universal"} AI expert. How can I help you today?
+                      I&apos;m your {moduleName} AI expert. How can I help you today?
                     </p>
                   </div>
 
@@ -207,6 +223,28 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                       </>
                     )}
 
+                    {activeModule === "ops" && (
+                      <>
+                        <button onClick={() => sendMessage("Generate a high-availability strategy for this infrastructure.")} className="w-full text-left p-3 rounded-xl bg-accent/5 border border-accent/10 hover:bg-accent/10 transition-colors text-xs text-accent font-medium">
+                          &quot;Generate a high-availability strategy&quot;
+                        </button>
+                        <button onClick={() => sendMessage("How can I optimize the security of this Docker configuration?")} className="w-full text-left p-3 rounded-xl bg-accent/5 border border-accent/10 hover:bg-accent/10 transition-colors text-xs text-accent font-medium">
+                          &quot;Optimize security of this configuration&quot;
+                        </button>
+                      </>
+                    )}
+                    
+                    {activeModule === "docs" && (
+                      <>
+                        <button onClick={() => sendMessage("Make this architecture summary more accessible for stakeholders.")} className="w-full text-left p-3 rounded-xl bg-accent/5 border border-accent/10 hover:bg-accent/10 transition-colors text-xs text-accent font-medium">
+                          &quot;Make this summary more accessible&quot;
+                        </button>
+                        <button onClick={() => sendMessage("Identify any missing components in this system diagram context.")} className="w-full text-left p-3 rounded-xl bg-accent/5 border border-accent/10 hover:bg-accent/10 transition-colors text-xs text-accent font-medium">
+                          &quot;Identify missing components in diagram&quot;
+                        </button>
+                      </>
+                    )}
+                    
                     {activeModule === "chartgpt" && (
                       <>
                         <button onClick={() => sendMessage("What surprising trends or anomalies do you see in this data?")} className="w-full text-left p-3 rounded-xl bg-accent/5 border border-accent/10 hover:bg-accent/10 transition-colors text-xs text-accent font-medium">
@@ -235,10 +273,10 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                   {messages.map((msg, i) => (
                     <ChatMessage key={i} role={msg.role as "user" | "assistant"} content={msg.content} />
                   ))}
-                  {isLoading && messages[messages.length - 1].role === "user" && (
+                  {isLoading && messages[messages.length - 1]?.role === "user" && (
                     <div className="flex items-center gap-2 text-muted-foreground text-xs p-4 animate-pulse">
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      Assitant is thinking...
+                      Assistant is thinking...
                     </div>
                   )}
                 </>
@@ -278,4 +316,3 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   );
 }
 
-// Simple MessageSquare icon placeholder since I already imported it above or use standard Lucide

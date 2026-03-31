@@ -12,7 +12,9 @@ import {
   Search, 
   Trash2, 
   Download,
-  AlertCircle
+  AlertCircle,
+  Zap,
+  BookOpen
 } from "lucide-react";
 import { cn, downloadFile } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -36,12 +38,16 @@ const moduleIcons: Record<Module, React.ElementType> = {
   devlens: Brain,
   specforge: FileText,
   chartgpt: BarChart3,
+  ops: Zap,
+  docs: BookOpen,
 };
 
 const moduleColors: Record<Module, string> = {
   devlens: "text-accent",
   specforge: "text-amber",
   chartgpt: "text-violet",
+  ops: "text-emerald-500",
+  docs: "text-indigo-400",
 };
 
 const TABS = [
@@ -49,6 +55,8 @@ const TABS = [
   { id: "devlens", label: "DevLens", icon: <Brain className="w-3.5 h-3.5" /> },
   { id: "specforge", label: "SpecForge", icon: <FileText className="w-3.5 h-3.5" /> },
   { id: "chartgpt", label: "ChartGPT", icon: <BarChart3 className="w-3.5 h-3.5" /> },
+  { id: "ops", label: "PulseOps", icon: <Zap className="w-3.5 h-3.5" /> },
+  { id: "docs", label: "PulseDocs", icon: <BookOpen className="w-3.5 h-3.5" /> },
 ];
 
 export function HistorySidebar({

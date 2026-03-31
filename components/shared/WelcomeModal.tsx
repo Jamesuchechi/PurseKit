@@ -11,7 +11,9 @@ import {
   FileText, 
   BarChart3, 
   Command,
-  Key
+  Key,
+  Zap,
+  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -34,18 +36,26 @@ const steps = [
         </p>
         <div className="p-4 rounded-2xl bg-accent/5 border border-accent/10">
           <p className="text-[10px] font-bold text-accent uppercase tracking-[0.2em] mb-2">Workspace Modules</p>
-          <div className="flex gap-4">
-            <div className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl bg-background border border-border/50">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[80px] flex flex-col items-center gap-2 p-3 rounded-xl bg-background border border-border/50">
               <Brain className="w-5 h-5 text-accent" />
               <span className="text-[10px] font-bold uppercase">DevLens</span>
             </div>
-            <div className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl bg-background border border-border/50">
+            <div className="flex-1 min-w-[80px] flex flex-col items-center gap-2 p-3 rounded-xl bg-background border border-border/50">
               <FileText className="w-5 h-5 text-amber" />
               <span className="text-[10px] font-bold uppercase">SpecForge</span>
             </div>
-            <div className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl bg-background border border-border/50">
+            <div className="flex-1 min-w-[80px] flex flex-col items-center gap-2 p-3 rounded-xl bg-background border border-border/50">
               <BarChart3 className="w-5 h-5 text-violet" />
               <span className="text-[10px] font-bold uppercase">ChartGPT</span>
+            </div>
+            <div className="flex-1 min-w-[80px] flex flex-col items-center gap-2 p-3 rounded-xl bg-background border border-border/50">
+              <Zap className="w-5 h-5 text-emerald-500" />
+              <span className="text-[10px] font-bold uppercase">PulseOps</span>
+            </div>
+            <div className="flex-1 min-w-[80px] flex flex-col items-center gap-2 p-3 rounded-xl bg-background border border-border/50">
+              <BookOpen className="w-5 h-5 text-indigo-400" />
+              <span className="text-[10px] font-bold uppercase">PulseDocs</span>
             </div>
           </div>
         </div>
@@ -63,6 +73,8 @@ const steps = [
           { icon: Brain, label: "DevLens", text: "Deep code analysis, bug detection, and structural refactoring suggestions.", c: "text-accent" },
           { icon: FileText, label: "SpecForge", text: "Transform feature descriptions into professional PRDs and system specs.", c: "text-amber" },
           { icon: BarChart3, label: "ChartGPT", text: "Talk to your data. Upload CSVs and generate stunning visualizations via Chat.", c: "text-violet" },
+          { icon: Zap, label: "PulseOps", text: "Automate cloud infrastructure and delivery pipelines with hardened blueprints.", c: "text-emerald-500" },
+          { icon: BookOpen, label: "PulseDocs", text: "Generate comprehensive system documentation and visual architecture wikis.", c: "text-indigo-400" },
         ].map((item) => (
           <div key={item.label} className="flex items-start gap-4 p-3 rounded-2xl hover:bg-muted/30 transition-colors border border-transparent hover:border-border/50 group">
             <div className={`p-2 rounded-xl bg-muted group-hover:bg-white/10 ${item.c}`}>

@@ -12,7 +12,8 @@ import {
   Sparkles,
   ArrowUpRight,
   Filter,
-  ChevronDown
+  ChevronDown,
+  BookOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -285,7 +286,11 @@ function AnalyticsContent() {
                         <td className="py-4 pr-4">
                           <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-background border border-border group-hover:bg-accent/10 group-hover:border-accent/30 transition-all">
-                              {item.module === "devlens" ? <Brain className="w-4 h-4 text-accent" /> : item.module === "specforge" ? <FileText className="w-4 h-4 text-amber" /> : <BarChart3 className="w-4 h-4 text-violet" /> }
+                              {item.module === "devlens" ? <Brain className="w-4 h-4 text-accent" /> : 
+                               item.module === "specforge" ? <FileText className="w-4 h-4 text-amber" /> : 
+                               item.module === "chartgpt" ? <BarChart3 className="w-4 h-4 text-violet" /> :
+                               item.module === "ops" ? <Zap className="w-4 h-4 text-emerald-500" /> :
+                               <BookOpen className="w-4 h-4 text-indigo-400" /> }
                             </div>
                             <span className="text-sm font-bold text-foreground">
                               {item.title}
