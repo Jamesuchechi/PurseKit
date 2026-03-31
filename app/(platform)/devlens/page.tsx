@@ -424,7 +424,7 @@ function DevLensContent() {
   };
 
   const handleAnalyze = () => {
-    if (!code.trim()) return;
+    if (isDrafting ? !draftDescription.trim() : !code.trim()) return;
     setSaveInitiated(false);
     setStep("result");
     if (isDrafting) {

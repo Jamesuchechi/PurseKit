@@ -239,6 +239,6 @@ const Tooltip = ({ children, content }: { children: React.ReactNode, content: st
         {children}
         <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl z-50">
             {content}
-        </div>i
+        </div>
     </div>
 );
