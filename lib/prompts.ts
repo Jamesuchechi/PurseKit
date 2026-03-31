@@ -276,42 +276,47 @@ export function specforgeBlueprintPrompt(prd: string) {
 }
 
 export function devlensDraftingPrompt(description: string, techStack?: string) {
+  const stack = techStack || "React + Tailwind CSS (premium aesthetics)";
+  
   return `
-    You are a world-class senior full-stack engineer. 
-    Your task is to take a project description and generate a fully-functional "Working Draft" of the core implementation.
+    You are a world-class senior software architect and full-stack engineer. 
+    Your task is to take a high-level project description and generate a fully-functional "Working Draft" of the core implementation.
     
     User Description: "${description}"
-    ${techStack ? `Specified Tech Stack: ${techStack}` : "Preferred Stack: React + Tailwind CSS (premium aesthetics)"}
+    UNCOMPROMISING REQUIREMENT: The implementation MUST USE EXACTLY this tech stack: "${stack}"
     
     STRICT REQUIREMENTS:
-    1. GENERATIVE CODE: Write the actual source code for the main entry point or core component.
-    2. VISUAL PREVIEW: Ensure the code is self-contained and optimized for a visual sandbox preview (e.g., uses Tailwind, lucide-react, and standard React hooks).
-    3. FOLDER MANIFEST: The very first part of your response MUST BE a "Project Manifest" wrapped in a \`\`\`yaml code block.
-       This manifest MUST detail the recommended folder structure and where every component/hook/lib file should live.
-    4. IN-FILE COMMENTS: Add clear comments within the code explaining the logic and how to expand it.
+    1. GENERATIVE CODE: Write the actual source code for the main entry point, core logic, or primary components of the project.
+    2. ARCHITECTURAL FIDELITY: Strictly adhere to the idioms, folder structures, and best practices of the SPECIFIED stack (${stack}). 
+    3. MULTI-FILE ARCHITECTURE: You MUST generate multiple code blocks if the project architecture requires it (e.g., separating components, hooks, or backend routers).
+       For EVERY code block, you MUST precede it with a clear delimiter: [FILE: filename.extension]
+    4. VISUAL PREVIEW: If the stack is a frontend stack (React, HTML, Vue, Svelte), ensure the main entry point code block is self-contained and optimized for a visual sandbox preview.
+    5. FOLDER MANIFEST: The very first part of your response MUST BE a "Project Architecture Manifest" wrapped in a \`\`\`yaml code block.
     
-    Example Manifest Format:
+    Example Manifest and File Format:
     \`\`\`yaml
     project_structure:
-      root:
-        - README.md
-        - package.json
       src:
-        components:
-          - Layout.tsx
-          - DashboardItem.tsx
-        hooks:
-          - useCustomHook.ts
-        lib:
-          - utils.ts
+        - Layout.tsx
+        - DashboardItem.tsx
+    \`\`\`
+    
+    [FILE: Layout.tsx]
+    \`\`\`tsx
+    // source code here
+    \`\`\`
+    
+    [FILE: DashboardItem.tsx]
+    \`\`\`tsx
+    // source code here
     \`\`\`
     
     Output Format:
-    - First: The YAML Manifest.
-    - Second: The working source code (React/HTML/etc).
-    - Third: A brief "Scaffold's Note" on how to run this locally.
+    - First: The YAML Manifest (Detailed architectural layout).
+    - Second: Multiple [FILE: name] sections containing the working source code.
+    - Third: A "Scaffold's Note" on how to run this locally, dependencies to install, and how to scale this into a production system.
     
-    BE BOLD. Build something visually stunning and technically sound.
+    BE BOLD. Build something visually stunning (if frontend) and technically flawless.
   `;
 }
 

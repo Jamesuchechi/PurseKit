@@ -16,12 +16,38 @@ import {
   Cpu,
   Eye,
   LucideIcon,
+  Volume2,
+  VolumeX,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { crucibleSystemPrompt, crucibleVerdictPrompt } from "@/lib/prompts";
 import { useAiStream } from "@/hooks/useAiStream";
 import { type AiMessage } from "@/lib/ai";
+
+interface SpeechRecognitionEvent extends Event {
+  results: {
+    [key: number]: {
+      [key: number]: {
+        transcript: string;
+      };
+    };
+  };
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (event: Event) => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: Event) => void;
+  onend: (event: Event) => void;
+  start: () => void;
+  stop: () => void;
+}
 
 export interface CrucibleMessage {
   id: string;
@@ -83,6 +109,9 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
   const [turnCount, setTurnCount] = React.useState(0);
   const [inputValue, setInputValue] = React.useState("");
   const [verdictState, setVerdictState] = React.useState<VerdictData | null>(null);
+  const [isVoiceEnabled, setIsVoiceEnabled] = React.useState(false);
+  const [isListening, setIsListening] = React.useState(false);
+  const recognitionRef = React.useRef<SpeechRecognition | null>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   // Guards against double-firing the startup call and the output-processing effect
@@ -94,6 +123,31 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
   stageRef.current = stage;
 
   const { output, isLoading, run, setOutput } = useAiStream();
+
+  const getInvestorInfo = React.useCallback((name?: string) => {
+    return INVESTORS.find((i) => name?.includes(i.name)) || INVESTORS[0];
+  }, []);
+
+  const speak = React.useCallback((text: string, investorName: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const investor = getInvestorInfo(investorName);
+    
+    if (investor.name === "Sarah") {
+      utterance.pitch = 1.3;
+      utterance.rate = 1.1;
+    } else if (investor.name === "Leo") {
+      utterance.pitch = 0.8;
+      utterance.rate = 0.9;
+    } else {
+      utterance.pitch = 1.0;
+      utterance.rate = 1.0;
+    }
+    
+    window.speechSynthesis.speak(utterance);
+  }, [getInvestorInfo]);
 
   const MAX_TURNS = 8;
 
@@ -159,7 +213,18 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
     }
 
     isProcessingOutput.current = false;
-  }, [isLoading, output, setOutput]);
+    
+    // Speak if voice is enabled
+    if (isVoiceEnabled && !isLoading) {
+      const investorMatch = output.match(/\[INVESTOR:\s*(.*?)\]/i);
+      const contentMatch = output.match(/\[CONTENT:\s*(.*?)\]/i);
+      const investorName = investorMatch?.[1].trim() || "Marc";
+      const content = contentMatch?.[1].trim() || output.replace(/\[.*?\]/g, "").trim();
+      if (content && stageRef.current !== "VERDICT") {
+        speak(content, investorName);
+      }
+    }
+  }, [isLoading, output, setOutput, isVoiceEnabled, speak]);
 
   // ── Send user message ─────────────────────────────────────────────────────
   const handleSend = async (e?: React.FormEvent) => {
@@ -190,9 +255,47 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
     }
   };
 
-  const getInvestorInfo = (name?: string) => {
-    return INVESTORS.find((i) => name?.includes(i.name)) || INVESTORS[0];
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.error("Speech Recognition not supported");
+      return;
+    }
+
+    const recognition: SpeechRecognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = event.results[0][0].transcript;
+      setInputValue((prev) => prev + (prev ? " " : "") + transcript);
+      setIsListening(false);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
   };
+
+  React.useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      recognitionRef.current?.stop();
+    };
+  }, []);
 
   if (verdictState) {
     return <VerdictCard verdict={verdictState} onRestart={onRestart} />;
@@ -219,6 +322,23 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
         </div>
 
         <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setIsVoiceEnabled(!isVoiceEnabled);
+              if (isVoiceEnabled) window.speechSynthesis.cancel();
+            }}
+            className={cn(
+              "p-2 rounded-xl border transition-all",
+              isVoiceEnabled ? "bg-accent/10 border-accent/30 text-accent" : "text-muted"
+            )}
+          >
+            {isVoiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </Button>
+
+          <div className="w-px h-6 bg-border/50 mx-2" />
+          
           {INVESTORS.map((inv) => {
             const isSpeaking = messages[messages.length - 1]?.investor === inv.name;
             return (
@@ -329,14 +449,28 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
       {/* INPUT AREA */}
       <div className="p-6 bg-muted/10 border-t border-border/50">
         <form onSubmit={handleSend} className="relative group">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-0">
+             <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={toggleListening}
+                className={cn(
+                  "h-10 w-10 rounded-xl transition-all",
+                  isListening ? "bg-red-500 text-white animate-pulse" : "text-muted hover:text-accent"
+                )}
+             >
+                {isListening ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+             </Button>
+          </div>
           <input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             disabled={isLoading || stage === "VERDICT"}
             placeholder={
-              isLoading ? "The panel is speaking..." : "Defend your thesis..."
+              isLoading ? "The panel is speaking..." : isListening ? "Listening..." : "Defend your thesis..."
             }
-            className="w-full bg-void/50 border border-border/50 rounded-2xl py-5 px-6 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all placeholder:text-muted/50"
+            className="w-full bg-void/50 border border-border/50 rounded-2xl py-5 pl-14 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all placeholder:text-muted/50"
           />
           <Button
             type="submit"

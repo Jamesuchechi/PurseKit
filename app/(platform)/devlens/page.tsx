@@ -1,7 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeft, Download, Play, RotateCcw, Sparkles, Trash2, Wand2 } from "lucide-react";
+import { DraftingForm } from "@/components/devlens/DraftingForm";
+import { FileTree } from "@/components/devlens/FileTree";
+import { SpecBridge } from "@/components/devlens/SpecBridge";
+import { ArrowLeft, Download, Play, RotateCcw, Sparkles, Trash2, Wand2, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { CodeInput } from "@/components/devlens/CodeInput";
@@ -61,6 +64,13 @@ function DevLensContent() {
   const debouncedCode = useDebounce(code, 1000);
   const [isReady, setIsReady] = React.useState(false);
   const [isDrafting, setIsDrafting] = React.useState(false);
+  const [draftDescription, setDraftDescription] = React.useState("");
+  const [draftTechStack, setDraftTechStack] = React.useState("");
+  const [draftFiles, setDraftFiles] = React.useState<{ name: string; content: string; language?: string }[]>([]);
+  const [activeFileIndex, setActiveFileIndex] = React.useState(0);
+  const [isSpecBridgeOpen, setIsSpecBridgeOpen] = React.useState(false);
+  const [specData, setSpecData] = React.useState<{ title: string; analysis: string } | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Terminal & Preview State
   const [activeTab, setActiveTab] = React.useState<TabType>("analysis");
@@ -89,17 +99,8 @@ function DevLensContent() {
         try {
           const { source, data } = JSON.parse(transfer);
           if (source === "specforge") {
-            const newCode = `// Scaffolding from SpecForge PRD: ${data.title}\n\n${data.requirements || ""}`;
-            setCode(newCode);
-            setLanguage("auto");
-            
-            // Auto-trigger analysis
-            const systemPrompt = devlensPrompt(newCode, "auto");
-            run(newCode, { systemPrompt });
-            setStep("result");
-            setSaveInitiated(false); 
-
-            toast("Transferred context from SpecForge", "success");
+            setSpecData({ title: data.title, analysis: data.analysis });
+            setIsSpecBridgeOpen(true);
             localStorage.removeItem("pulsekit_context_transfer");
           }
         } catch (e) {
@@ -107,7 +108,7 @@ function DevLensContent() {
         }
       }
     }
-  }, [searchParams, items, isReady, setOutput, toast, run]);
+  }, [searchParams, items, isReady, setOutput, toast]);
 
   React.useEffect(() => {
     try {
@@ -146,7 +147,7 @@ function DevLensContent() {
         });
       }, 500);
     }
-  }, [isLoading, output, error, saveInitiated, code, save, toast, addNotification]);
+  }, [isLoading, output, error, saveInitiated, code, draftDescription, isDrafting, save, toast, addNotification]);
 
   const handleRunCode = React.useCallback(async (customCode?: string) => {
     const codeToExecute = typeof customCode === 'string' ? customCode : code;
@@ -353,18 +354,40 @@ function DevLensContent() {
     }
   }, [code, language, run]);
 
-  // Auto-run if drafting
   React.useEffect(() => {
     if (!isLoading && isDrafting && output && step === "result") {
-      const codeMatch = output.match(/```(?:react|tsx|jsx|javascript|js|html|css)?\n([\s\S]*?)```/i);
-      if (codeMatch && codeMatch[1]) {
-        const extractedCode = codeMatch[1].trim();
+      const files: { name: string; content: string }[] = [];
+      const fileRegex = /\[FILE:\s*([^\]]+)\]\s*```(?:react|tsx|jsx|javascript|js|html|css|python|go|rust|bash|sql|typescript)?\n([\s\S]*?)```/gi;
+      
+      let match;
+      while ((match = fileRegex.exec(output)) !== null) {
+        files.push({ name: match[1].trim(), content: match[2].trim() });
+      }
+
+      if (files.length > 0) {
+        setDraftFiles(files);
+        setActiveFileIndex(0);
+        const mainFile = files[0];
+        
         setTimeout(() => {
-          if (output.toLowerCase().includes("react") || output.toLowerCase().includes("html") || output.toLowerCase().includes("css")) {
+          const ext = mainFile.name.split(".").pop()?.toLowerCase();
+          const isFrontend = ["tsx", "jsx", "html", "css", "js", "ts"].includes(ext || "");
+          
+          if (isFrontend) {
             setActiveTab("preview");
+          } else {
+            setActiveTab("console");
           }
-          handleRunCode(extractedCode);
+          handleRunCode(mainFile.content);
         }, 800);
+      } else {
+        // Fallback for single block if no [FILE] tags found
+        const singleMatch = output.match(/```(?:react|tsx|jsx|javascript|js|html|css|python|go|rust|bash|sql|typescript)?\n([\s\S]*?)```/i);
+        if (singleMatch && singleMatch[1]) {
+          const content = singleMatch[1].trim();
+          setDraftFiles([{ name: "Main implementation", content }]);
+          setTimeout(() => handleRunCode(content), 800);
+        }
       }
     }
   }, [isLoading, isDrafting, output, step, handleRunCode]);
@@ -390,9 +413,10 @@ function DevLensContent() {
     setSaveInitiated(false);
     setStep("result");
     if (isDrafting) {
+      if (!draftDescription.trim()) return;
       setActiveTab("console");
-      const systemPrompt = devlensDraftingPrompt(code, language === "auto" ? undefined : language);
-      run(code, { systemPrompt });
+      const systemPrompt = devlensDraftingPrompt(draftDescription, draftTechStack);
+      run(draftDescription, { systemPrompt });
     } else {
       setActiveTab("analysis");
       const systemPrompt = devlensPrompt(code, language);
@@ -425,6 +449,34 @@ function DevLensContent() {
   };
 
   const handleClearLogs = () => setLogs([]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast("File exceeds 2MB limit", "error");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      setCode(content);
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      if (ext) setLanguage(ext);
+      toast(`Imported ${file.name}`, "success");
+    };
+    reader.readAsText(file);
+  };
+
+  const handleSpecImport = (focus: string, description: string) => {
+    setIsDrafting(true);
+    setDraftDescription(description);
+    setDraftTechStack(focus === "data" ? "Python / FastAPI" : focus === "ui" ? "React + Tailwind" : "Next.js 14 / TypeScript");
+    setStep("input");
+    toast(`Imported specs from SpecForge. Ready for drafting.`, "success");
+  };
 
   useGlobalActions({
     onAnalyze: handleAnalyze,
@@ -460,6 +512,24 @@ function DevLensContent() {
                   <span className="ml-2 text-xs font-mono text-muted-foreground uppercase tracking-widest">Active Editor</span>
                 </div>
                 <div className="flex items-center gap-4">
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    onChange={handleFileUpload} 
+                    accept=".js,.ts,.tsx,.jsx,.html,.css,.py,.go,.rs,.sql,.md,.txt,.sh"
+                  />
+                  {!isDrafting && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => fileInputRef.current?.click()} 
+                      className="text-muted hover:text-accent gap-2"
+                    >
+                      <UploadCloud className="w-4 h-4" />
+                      Browse
+                    </Button>
+                  )}
                   <div className="w-[160px]">
                     <LanguageSelector value={language} onChange={setLanguage} />
                   </div>
@@ -484,27 +554,43 @@ function DevLensContent() {
               </div>
 
               <div className="flex-1 p-2">
-                <CodeInput value={code} onChange={setCode} errorLines={errorLines} className="h-[400px] sm:h-[500px]" />
+                {isDrafting ? (
+                  <DraftingForm 
+                    description={draftDescription} 
+                    setDescription={setDraftDescription}
+                    techStack={draftTechStack}
+                    setTechStack={setDraftTechStack}
+                    className="min-h-[400px] sm:min-h-[500px]"
+                  />
+                ) : (
+                  <CodeInput value={code} onChange={setCode} errorLines={errorLines} className="h-[400px] sm:h-[500px]" />
+                )}
               </div>
 
               <div className="px-6 py-4 bg-muted/10 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-muted-foreground">{code.length} chars</span>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {isDrafting ? `${draftDescription.length} chars description` : `${code.length} chars`}
+                  </span>
                   <span className="text-muted-foreground/30">•</span>
-                  <span className="text-xs font-mono text-muted-foreground">{code.split("\n").filter(Boolean).length} lines</span>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {isDrafting ? "Drafting Mode" : `${code.split("\n").filter(Boolean).length} lines`}
+                  </span>
                 </div>
                 
                 <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <Button variant="ghost" size="sm" onClick={handleClear} disabled={!code.trim()} className="hover:bg-red-500/10 hover:text-red-500">
+                  <Button variant="ghost" size="sm" onClick={handleClear} disabled={isDrafting ? !draftDescription.trim() : !code.trim()} className="hover:bg-red-500/10 hover:text-red-500">
                     <Trash2 className="w-4 h-4 mr-2" /> Clear
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={handleSample}>Sample</Button>
+                  {!isDrafting && <Button variant="secondary" size="sm" onClick={handleSample}>Sample</Button>}
                   <div className="flex-1 sm:hidden" />
                   <div className="flex items-center gap-2">
-                    <Button onClick={() => handleRunCode()} variant="outline" size="sm" disabled={!code.trim() || isRunning} className="gap-2 border-accent/20 text-accent hover:bg-accent/5">
-                      <Play className="h-4 w-4" /> Run
-                    </Button>
-                    <Button onClick={handleAnalyze} disabled={!code.trim() || isLoading} className={cn("shadow-lg shadow-accent/20", isDrafting && "bg-indigo-600 hover:bg-indigo-700")}>
+                    {!isDrafting && (
+                      <Button onClick={() => handleRunCode()} variant="outline" size="sm" disabled={!code.trim() || isRunning} className="gap-2 border-accent/20 text-accent hover:bg-accent/5">
+                        <Play className="h-4 w-4" /> Run
+                      </Button>
+                    )}
+                    <Button onClick={handleAnalyze} disabled={isDrafting ? !draftDescription.trim() || isLoading : !code.trim() || isLoading} className={cn("shadow-lg shadow-accent/20", isDrafting && "bg-indigo-600 hover:bg-indigo-700")}>
                       <Sparkles className="h-4 w-4 mr-2" /> 
                       {isDrafting ? "Draft Project" : "Analyze"}
                     </Button>
@@ -558,32 +644,55 @@ function DevLensContent() {
             </div>
 
             <div className="h-[calc(100vh-16rem)] min-h-[600px] flex flex-col">
-              <TerminalHub activeTab={activeTab} onTabChange={setActiveTab} isStreaming={isLoading}>
-                {activeTab === "analysis" && (
-                  <div className="h-full overflow-y-auto styled-scrollbar pr-2 pb-10">
-                    <AnalysisOutput 
-                      markdown={output} 
-                      isStreaming={isLoading} 
-                      onApplyFix={(fixedCode) => {
-                        setCode(fixedCode);
-                        setStep("input");
-                        toast("Fix applied", "success");
-                      }}
-                      onTransformToPrd={handleTransformToPrd}
-                      onErrorLinesFound={setErrorLines}
-                    />
+                  <div className="flex flex-col md:flex-row h-full">
+                    {isDrafting && draftFiles.length > 0 && (
+                      <FileTree 
+                        files={draftFiles} 
+                        activeIndex={activeFileIndex} 
+                        onSelect={(index) => {
+                          setActiveFileIndex(index);
+                          handleRunCode(draftFiles[index].content);
+                        }}
+                      />
+                    )}
+                    <div className="flex-1 overflow-hidden h-full">
+                      <TerminalHub activeTab={activeTab} onTabChange={setActiveTab} isStreaming={isLoading}>
+                        {activeTab === "analysis" && (
+                          <div className="h-full overflow-y-auto styled-scrollbar pr-2 pb-10">
+                            <AnalysisOutput 
+                              markdown={output} 
+                              isStreaming={isLoading} 
+                              onApplyFix={(fixedCode) => {
+                                setCode(fixedCode);
+                                setStep("input");
+                                toast("Fix applied", "success");
+                              }}
+                              onTransformToPrd={handleTransformToPrd}
+                              onErrorLinesFound={setErrorLines}
+                            />
+                          </div>
+                        )}
+                        {activeTab === "console" && (
+                          <OutputConsole logs={logs} onClear={handleClearLogs} executionMode={executionMode} />
+                        )}
+                        {activeTab === "preview" && (
+                          <PreviewFrame html={previewHtml} onExpand={() => setIsPreviewModalOpen(true)} />
+                        )}
+                      </TerminalHub>
+                    </div>
                   </div>
-                )}
-                {activeTab === "console" && (
-                  <OutputConsole logs={logs} onClear={handleClearLogs} executionMode={executionMode} />
-                )}
-                {activeTab === "preview" && (
-                  <PreviewFrame html={previewHtml} onExpand={() => setIsPreviewModalOpen(true)} />
-                )}
-              </TerminalHub>
             </div>
 
             <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} html={previewHtml} />
+
+            {specData && (
+              <SpecBridge 
+                isOpen={isSpecBridgeOpen} 
+                onClose={() => setIsSpecBridgeOpen(false)} 
+                specData={specData}
+                onImport={handleSpecImport}
+              />
+            )}
           </motion.div>
         )}
       </AnimatePresence>

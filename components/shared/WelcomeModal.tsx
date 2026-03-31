@@ -171,7 +171,7 @@ export function WelcomeModal({ isOpen, onClose, onComplete }: WelcomeModalProps)
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-xl bg-background dark:bg-void border border-border rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row h-[560px] md:h-[480px]"
+            className="relative w-full max-w-xl bg-background dark:bg-void border border-border rounded-[24px] md:rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row h-auto max-h-[90vh] md:h-[480px]"
           >
             {/* Sidebar Visual */}
             <div className={`hidden md:flex w-40 p-8 flex-col justify-between items-center transition-colors duration-500 bg-${step.color}/10 border-r border-border/50`}>
@@ -196,7 +196,7 @@ export function WelcomeModal({ isOpen, onClose, onComplete }: WelcomeModalProps)
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col p-8 md:p-10 relative">
+            <div className="flex-1 flex flex-col p-6 md:p-10 relative">
               <button 
                 onClick={onClose}
                 className="absolute top-6 right-6 p-2 rounded-xl hover:bg-muted transition-colors text-muted hover:text-foreground"
@@ -214,8 +214,8 @@ export function WelcomeModal({ isOpen, onClose, onComplete }: WelcomeModalProps)
                     transition={{ duration: 0.3, ease: "easeOut" }}
                     className="h-full flex flex-col"
                   >
-                    <div className="space-y-2 mb-8 pr-8">
-                      <h2 className={`text-4xl font-display font-black tracking-tighter text-foreground group`}>
+                    <div className="space-y-2 mb-5 md:mb-8 pr-8">
+                      <h2 className="text-2xl md:text-4xl font-display font-black tracking-tighter text-foreground group">
                         {step.title}
                       </h2>
                       <p className="text-muted text-sm font-medium leading-relaxed">
@@ -230,7 +230,7 @@ export function WelcomeModal({ isOpen, onClose, onComplete }: WelcomeModalProps)
                 </AnimatePresence>
               </div>
 
-              <div className="mt-10 flex items-center justify-between pt-6 border-t border-border/50">
+              <div className="mt-6 md:mt-10 flex items-center justify-between pt-6 border-t border-border/50">
                 <button 
                   onClick={handleBack}
                   disabled={currentStep === 0}
@@ -244,13 +244,13 @@ export function WelcomeModal({ isOpen, onClose, onComplete }: WelcomeModalProps)
                         onClick={onClose}
                         variant="ghost"
                         size="sm"
-                        className="text-muted hover:text-foreground text-[10px] font-black uppercase tracking-widest h-12 px-6"
+                        className="text-muted hover:text-foreground text-[10px] font-black uppercase tracking-widest h-10 md:h-12 px-6"
                     >
                         Skip
                     </Button>
                     <Button 
                         onClick={handleNext}
-                        className={`h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-${step.color} shadow-lg shadow-${step.color}/20 hover:scale-[1.02] active:scale-[0.98] transition-all`}
+                        className={`h-10 md:h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-${step.color} shadow-lg shadow-${step.color}/20 hover:scale-[1.02] active:scale-[0.98] transition-all`}
                     >
                         {currentStep === steps.length - 1 ? "Get Started" : "Continue"} 
                         {currentStep < steps.length - 1 && <ChevronRight className="w-4 h-4 ml-2" />}
