@@ -11,9 +11,11 @@ import {
   History, 
   Sun, 
   Moon,
-  Sparkles,
   Settings,
-  Bell
+  Bell,
+  Terminal,
+  BookOpen,
+  Sparkles
 } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
@@ -26,6 +28,8 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, color: "text-muted-foreground" },
   { href: "/devlens", label: "DevLens", icon: Brain, color: "text-accent" },
   { href: "/specforge", label: "SpecForge", icon: FileText, color: "text-amber" },
+  { href: "/ops", label: "PulseOps", icon: Terminal, color: "text-blue-400" },
+  { href: "/docs", label: "PulseDocs", icon: BookOpen, color: "text-indigo-400" },
   { href: "/chartgpt", label: "ChartGPT", icon: BarChart3, color: "text-violet" },
   { href: "/settings", label: "Settings", icon: Settings, color: "text-slate-400" },
   { href: "/notifications", label: "Notifications", icon: Bell, color: "text-indigo-500" },

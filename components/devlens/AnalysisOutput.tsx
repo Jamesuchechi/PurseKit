@@ -4,7 +4,7 @@ import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ChevronDown, ChevronUp, FileText, Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, Terminal, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "@/components/ui/CopyButton";
@@ -28,6 +28,7 @@ interface AnalysisOutputProps {
   isStreaming: boolean;
   onApplyFix?: (code: string) => void;
   onTransformToPrd?: () => void;
+  onProvision?: () => void;
   onErrorLinesFound?: (lines: number[]) => void;
   className?: string;
 }
@@ -37,6 +38,7 @@ export function AnalysisOutput({
   isStreaming, 
   onApplyFix, 
   onTransformToPrd,
+  onProvision,
   onErrorLinesFound, 
   className 
 }: AnalysisOutputProps) {
@@ -122,14 +124,27 @@ export function AnalysisOutput({
               <p className="text-[11px] text-muted-foreground font-medium">Generate a comprehensive PRD based on this code analysis.</p>
             </div>
           </div>
-          <Button 
-            onClick={onTransformToPrd}
-            className="rounded-2xl gap-2 px-8 bg-accent hover:bg-accent/90 shadow-xl shadow-accent/20 transition-all hover:scale-105 active:scale-95 group"
-          >
-            <FileText className="w-4 h-4" />
-            Generate PRD
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <Button 
+              onClick={onTransformToPrd}
+              className="rounded-2xl gap-2 px-8 bg-accent hover:bg-accent/90 shadow-xl shadow-accent/20 transition-all hover:scale-105 active:scale-95 group"
+            >
+              <FileText className="w-4 h-4" />
+              Generate PRD
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Button>
+            {onProvision && (
+              <Button 
+                onClick={onProvision}
+                variant="outline"
+                className="rounded-2xl gap-2 px-8 border-accent/30 hover:bg-accent/10 transition-all hover:scale-105 active:scale-95 group"
+              >
+                <Terminal className="w-4 h-4 text-accent" />
+                Provision Cloud
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            )}
+          </div>
         </motion.div>
       )}
 

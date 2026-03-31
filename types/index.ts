@@ -2,7 +2,7 @@
 // PulseKit — Shared TypeScript Types
 // ============================================================
 
-export type Module = "devlens" | "specforge" | "chartgpt";
+export type Module = "devlens" | "specforge" | "chartgpt" | "ops" | "docs";
 
 // ─── History ────────────────────────────────────────────────
 

@@ -67,6 +67,8 @@ function PlatformLayoutContent({
   useKeyboardShortcut("/", () => setIsChatOpen(true));
   useKeyboardShortcut("h", () => setIsHistoryOpen(true));
   useKeyboardShortcut("a", () => router.push("/analytics"), { metaKey: true });
+  useKeyboardShortcut("o", () => router.push("/ops"), { metaKey: true });
+  useKeyboardShortcut("d", () => router.push("/docs"), { metaKey: true });
   useKeyboardShortcut("?", () => setIsCheatsheetOpen(prev => !prev), { metaKey: false, preventDefault: true, ignoreInputs: true });
   
   // Dispatchable actions
@@ -91,13 +93,15 @@ function PlatformLayoutContent({
   // Aggregated history from all modules for the shared sidebar
   const { items: devlensItems, remove: removeDevLens, clear: clearDevLens } = useHistory("devlens");
   const { items: specforgeItems, remove: removeSpecForge, clear: clearSpecForge } = useHistory("specforge");
-  const { items: chartgptItems, remove: removeChartGPT, clear: clearSpecChartGPT } = useHistory("chartgpt");
+  const { items: chartgptItems, remove: removeChartGPT, clear: clearChartGPT } = useHistory("chartgpt");
+  const { items: opsItems, remove: removeOps, clear: clearOps } = useHistory("ops");
+  const { items: docsItems, remove: removeDocs, clear: clearDocs } = useHistory("docs");
 
   const allItems = React.useMemo(() => {
-    return [...devlensItems, ...specforgeItems, ...chartgptItems]
+    return [...devlensItems, ...specforgeItems, ...chartgptItems, ...opsItems, ...docsItems]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 50);
-  }, [devlensItems, specforgeItems, chartgptItems]);
+  }, [devlensItems, specforgeItems, chartgptItems, opsItems, docsItems]);
 
   const handleHistoryItemClick = (item: HistoryItem) => {
     setIsHistoryOpen(false);
@@ -108,12 +112,16 @@ function PlatformLayoutContent({
     if (item.module === "devlens") await removeDevLens(item.id);
     if (item.module === "specforge") await removeSpecForge(item.id);
     if (item.module === "chartgpt") await removeChartGPT(item.id);
+    if (item.module === "ops") await removeOps(item.id);
+    if (item.module === "docs") await removeDocs(item.id);
   };
 
   const handleClearAll = async () => {
     await clearDevLens();
     await clearSpecForge();
-    await clearSpecChartGPT();
+    await clearChartGPT();
+    await clearOps();
+    await clearDocs();
   };
 
   return (

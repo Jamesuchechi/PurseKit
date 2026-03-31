@@ -408,6 +408,21 @@ function DevLensContent() {
     router.push("/specforge?import=devlens");
   };
 
+  const handleProvision = () => {
+    if (!output) return;
+    const transfer = {
+      source: "devlens",
+      data: {
+        name: truncate(code.split("\n")[0]?.trim() || "DevLens Project", 40),
+        language: language === "auto" ? detectCodeLanguage(code) : language,
+        architecture: draftDescription || "Custom implementation generated via DevLens.",
+        files: draftFiles.length > 0 ? draftFiles : [{ name: "main", content: code }]
+      }
+    };
+    localStorage.setItem("pulsekit_context_transfer", JSON.stringify(transfer));
+    router.push("/ops?import=devlens");
+  };
+
   const handleAnalyze = () => {
     if (!code.trim()) return;
     setSaveInitiated(false);
@@ -668,6 +683,7 @@ function DevLensContent() {
                                 toast("Fix applied", "success");
                               }}
                               onTransformToPrd={handleTransformToPrd}
+                              onProvision={handleProvision}
                               onErrorLinesFound={setErrorLines}
                             />
                           </div>

@@ -192,6 +192,19 @@ function SpecForgeContent() {
     router.push("/devlens?import=specforge");
   };
 
+  const handleDocumentArchitecture = () => {
+    if (!output) return;
+    const transfer = {
+      source: "specforge",
+      data: {
+        title: truncate(description.split("\n")[0]?.trim() || "PRD Specs", 40),
+        analysis: output
+      }
+    };
+    localStorage.setItem("pulsekit_context_transfer", JSON.stringify(transfer));
+    router.push("/docs?import=specforge");
+  };
+
   const handleBackToEdit = () => {
     setStep("input");
     reset();
@@ -218,10 +231,6 @@ function SpecForgeContent() {
     if (!output) return;
     setBlueprintOutput("");
     const prompt = specforgeBlueprintPrompt(output);
-    
-    // We use a secondary run or just direct setOutput for simplicity here, 
-    // but since we want to keep the PRD output visible in background or history, 
-    // we'll manage a separate stream or just transition.
     setStep("blueprint");
     
     // Clear previous stream state to reuse useAiStream for blueprint
@@ -297,6 +306,10 @@ function SpecForgeContent() {
                   <Button onClick={handleGenerateBlueprint} variant="outline" size="sm" className="gap-2 shrink-0 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/5">
                     <Zap className="w-4 h-4" />
                     Blueprint Suite
+                  </Button>
+                  <Button onClick={handleDocumentArchitecture} variant="outline" size="sm" className="gap-2 shrink-0 border-indigo-500/20 text-indigo-500 hover:bg-indigo-500/5">
+                    <BookOpen className="w-4 h-4" />
+                    Archive Wiki
                   </Button>
                   <ExportButton content={output} title={truncate(description.split("\n")[0]?.trim() || "PRD", 30)} />
                   <Button variant="outline" size="sm" onClick={handleNewRequest} className="gap-2 shrink-0 border-border/50">

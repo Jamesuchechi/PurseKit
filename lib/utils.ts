@@ -22,7 +22,7 @@ export function truncate(str: string, length: number) {
   return str.slice(0, length) + "...";
 }
 
-export function downloadFile(content: string, fileName: string, contentType: string) {
+export function downloadFile(content: string, fileName: string, contentType: string = "text/plain") {
   const a = document.createElement("a");
   const file = new Blob([content], { type: contentType });
   a.href = URL.createObjectURL(file);
