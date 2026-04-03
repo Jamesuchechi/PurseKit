@@ -5,6 +5,7 @@
  */
 
 import { type AiMessage, type AiProvider } from "@/types";
+export type { AiMessage, AiProvider };
 
 export interface AiOptions {
   provider?: AiProvider;
@@ -83,9 +84,10 @@ export async function generateAiResponse({
           
           // If it's an array and the provider is text-only, stringify it
           if (prov !== "openrouter") {
-            const textContent = msg.content
+            const contentArray = msg.content as Array<{ type: string; text?: string }>;
+            const textContent = contentArray
               .filter(part => part.type === "text")
-              .map(part => (part as { type: "text"; text: string }).text)
+              .map(part => part.text || "")
               .join("\n");
             return { ...msg, content: textContent };
           }
