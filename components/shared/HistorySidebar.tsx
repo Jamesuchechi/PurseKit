@@ -40,6 +40,7 @@ const moduleIcons: Record<Module, React.ElementType> = {
   chartgpt: BarChart3,
   ops: Zap,
   docs: BookOpen,
+  lens: Search,
 };
 
 const moduleColors: Record<Module, string> = {
@@ -48,6 +49,7 @@ const moduleColors: Record<Module, string> = {
   chartgpt: "text-violet",
   ops: "text-emerald-500",
   docs: "text-indigo-400",
+  lens: "text-blue-400",
 };
 
 const TABS = [

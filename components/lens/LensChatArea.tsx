@@ -3,6 +3,7 @@
 import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import type { AiMessage } from "@/types";
+import Image from "next/image";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Sparkles, User, Code2, Play } from "lucide-react";
@@ -126,8 +127,13 @@ export function LensChatArea({ messages, isStreaming, className }: LensChatAreaP
                       <div className="flex flex-wrap gap-2 mb-4">
                         {images.map((img, idx) => (
                           <div key={idx} className="relative w-48 aspect-video rounded-xl overflow-hidden border border-border/50 shadow-lg">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={img.image_url?.url} alt="Uploaded context" className="w-full h-full object-cover" />
+                            <Image 
+                              src={img.image_url?.url || ""} 
+                              alt="Uploaded context" 
+                              fill
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                              className="object-cover" 
+                            />
                           </div>
                         ))}
                       </div>

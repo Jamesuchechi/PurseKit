@@ -3,12 +3,7 @@
  * All module-specific system prompts and prompt templates live here.
  */
 
-import type { ChartConfig } from "@/types";
-
-export interface AiMessage {
-  role: "user" | "assistant" | "system";
-  content: string;
-}
+import type { ChartConfig, AiMessage } from "@/types";
 
 export function devlensPrompt(code: string, language: string) {
   const isAuto = !language || language.toLowerCase() === "auto" || language.toLowerCase() === "auto detect";

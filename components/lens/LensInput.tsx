@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Send, Plus, Loader2, Paperclip, Mic, X, Command } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface AttachedFile {
@@ -231,9 +232,13 @@ export function LensInput({ value, onChange, onSubmit, isLoading, className, onN
           {attachments.map((att, i) => (
             <div key={i} className="relative group">
               {att.type.startsWith("image/") ? (
-                <div className="w-14 h-14 rounded-xl overflow-hidden border border-border/50 bg-muted/50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={att.content} alt={att.name} className="w-full h-full object-cover" />
+                <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-border/50 bg-muted/50">
+                  <Image 
+                    src={att.content} 
+                    alt={att.name} 
+                    fill
+                    className="object-cover" 
+                  />
                 </div>
               ) : (
                 <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border border-border/50 rounded-xl text-xs font-medium h-14">
