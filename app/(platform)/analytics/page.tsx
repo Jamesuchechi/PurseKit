@@ -32,6 +32,7 @@ interface ActivityPoint {
   chartgpt: number;
   ops: number;
   docs: number;
+  lens: number;
 }
 
 interface DistributionPoint {
@@ -59,7 +60,7 @@ function AnalyticsContent() {
 
   React.useEffect(() => {
     const loadAndProcess = () => {
-      const modules: Module[] = ["devlens", "specforge", "chartgpt", "ops", "docs"];
+      const modules: Module[] = ["devlens", "specforge", "chartgpt", "ops", "docs", "lens"];
       let allItems: HistoryItem[] = [];
 
       modules.forEach(m => {
@@ -83,6 +84,7 @@ function AnalyticsContent() {
         { name: "ChartGPT", value: allItems.filter(i => i.module === "chartgpt").length },
         { name: "PulseOps", value: allItems.filter(i => i.module === "ops").length },
         { name: "PulseDocs", value: allItems.filter(i => i.module === "docs").length },
+        { name: "Lens", value: allItems.filter(i => i.module === "lens").length },
       ].filter(d => d.value > 0);
 
       // ─── 2. Activity (Last 14 Days) ───────────────────────────
@@ -99,7 +101,8 @@ function AnalyticsContent() {
           specforge: 0, 
           chartgpt: 0,
           ops: 0,
-          docs: 0 
+          docs: 0,
+          lens: 0
         };
       }
 
@@ -290,6 +293,7 @@ function AnalyticsContent() {
                                item.module === "specforge" ? <FileText className="w-4 h-4 text-amber" /> : 
                                item.module === "chartgpt" ? <BarChart3 className="w-4 h-4 text-violet" /> :
                                item.module === "ops" ? <Zap className="w-4 h-4 text-emerald-500" /> :
+                               item.module === "lens" ? <Sparkles className="w-4 h-4 text-rose-400" /> :
                                <BookOpen className="w-4 h-4 text-indigo-400" /> }
                             </div>
                             <span className="text-sm font-bold text-foreground">
@@ -301,6 +305,7 @@ function AnalyticsContent() {
                           <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border tracking-wide uppercase ${
                             item.module === "devlens" ? "bg-accent/10 text-accent border-accent/20" : 
                             item.module === "specforge" ? "bg-amber/10 text-amber border-amber/20" : 
+                            item.module === "lens" ? "bg-rose-400/10 text-rose-400 border-rose-400/20" :
                             "bg-violet/10 text-violet border-violet/20"
                           }`}>
                             {item.module}

@@ -77,6 +77,22 @@ export async function generateAiResponse({
 
     for (const currentModel of modelsToTry) {
       try {
+        // Prepare messages for the specific provider
+        const formattedMessages = messages.map(msg => {
+          if (typeof msg.content === "string") return msg;
+          
+          // If it's an array and the provider is text-only, stringify it
+          if (prov !== "openrouter") {
+            const textContent = msg.content
+              .filter(part => part.type === "text")
+              .map(part => (part as { type: "text"; text: string }).text)
+              .join("\n");
+            return { ...msg, content: textContent };
+          }
+          
+          return msg;
+        });
+
         const response = await fetch(config.baseUrl, {
           method: "POST",
           headers: {
@@ -86,7 +102,7 @@ export async function generateAiResponse({
           },
           body: JSON.stringify({
             model: currentModel,
-            messages,
+            messages: formattedMessages,
             max_tokens,
             temperature,
             stream,
