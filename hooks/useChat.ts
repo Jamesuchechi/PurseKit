@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { type AiMessage } from "@/types";
+import { type AiMessage, type AiMessageContent } from "@/types";
 
 interface ChatOptions {
   systemPrompt?: string;
@@ -14,8 +14,9 @@ export function useChat(options: ChatOptions = {}) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const sendMessage = React.useCallback(async (content: string, provider = "groq", model?: string) => {
-    if (!content.trim()) return;
+  const sendMessage = React.useCallback(async (content: AiMessageContent, provider = "groq", model?: string) => {
+    // If content is string, trim it. If it's an array, it has at least text or image.
+    if (typeof content === "string" && !content.trim()) return;
 
     const userMessage: AiMessage = { role: "user", content };
     const newMessages = [...messages, userMessage];
@@ -105,6 +106,7 @@ export function useChat(options: ChatOptions = {}) {
 
   return {
     messages,
+    setMessages,
     isLoading,
     error,
     sendMessage,

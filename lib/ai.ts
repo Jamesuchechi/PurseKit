@@ -4,12 +4,7 @@
  * All keys are strictly server-side.
  */
 
-export type AiProvider = "groq" | "mistral" | "openrouter";
-
-export interface AiMessage {
-  role: "user" | "assistant" | "system";
-  content: string;
-}
+import { type AiMessage, type AiProvider } from "@/types";
 
 export interface AiOptions {
   provider?: AiProvider;
@@ -43,9 +38,17 @@ const PROVIDER_CONFIG = {
     baseUrl: "https://openrouter.ai/api/v1/chat/completions",
     apiKey: process.env.OPENROUTER_API_KEY,
     models: [
+      "openai/gpt-4o",
+      "anthropic/claude-3.5-sonnet",
+      "anthropic/claude-3-5-haiku",
+      "google/gemini-2.5-flash",
+      "x-ai/grok-2-1212",
+      "meta-llama/llama-3.3-70b-instruct",
       "google/gemini-2.0-flash-exp:free",
       "meta-llama/llama-3.3-70b-instruct:free",
       "meta-llama/llama-3.1-8b-instruct:free",
+      "mistralai/mistral-nemo:free",
+      "qwen/qwen-2.5-coder-32b-instruct:free",
     ],
   },
 };

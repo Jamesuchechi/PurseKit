@@ -2,7 +2,7 @@
 // PulseKit — Shared TypeScript Types
 // ============================================================
 
-export type Module = "devlens" | "specforge" | "chartgpt" | "ops" | "docs";
+export type Module = "devlens" | "specforge" | "chartgpt" | "ops" | "docs" | "lens";
 
 // ─── History ────────────────────────────────────────────────
 
@@ -124,13 +124,19 @@ export interface Notification {
 
 // ─── AI ─────────────────────────────────────────────────────
 
+export type AiMessageContent = 
+  | string 
+  | Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }>;
+
 export interface AiMessage {
   role: "user" | "assistant" | "system";
-  content: string;
+  content: AiMessageContent;
 }
 
+export type AiProvider = "groq" | "mistral" | "openrouter";
+
 export interface AiRequestOptions {
-  provider?: "groq" | "mistral" | "openrouter";
+  provider?: AiProvider;
   model?: string;
   temperature?: number;
   max_tokens?: number;

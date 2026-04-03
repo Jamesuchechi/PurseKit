@@ -15,7 +15,8 @@ import {
   Bell,
   Terminal,
   BookOpen,
-  Sparkles
+  Sparkles,
+  MessageSquare
 } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/specforge", label: "SpecForge", icon: FileText, color: "text-amber" },
   { href: "/ops", label: "PulseOps", icon: Terminal, color: "text-blue-400" },
   { href: "/docs", label: "PulseDocs", icon: BookOpen, color: "text-indigo-400" },
+  { href: "/lens", label: "Lens", icon: MessageSquare, color: "text-rose-500" },
   { href: "/chartgpt", label: "ChartGPT", icon: BarChart3, color: "text-violet" },
   { href: "/settings", label: "Settings", icon: Settings, color: "text-slate-400" },
   { href: "/notifications", label: "Notifications", icon: Bell, color: "text-indigo-500" },

@@ -71,7 +71,12 @@ export function useHistory<T = unknown>(module: Module) {
     persist([]);
   };
 
+  const update = async (id: string, updates: Partial<HistoryItem<T>>): Promise<void> => {
+    const newItems = items.map((item) => (item.id === id ? { ...item, ...updates } : item));
+    persist(newItems);
+  };
+
   const find = (id: string) => items.find((i) => i.id === id);
 
-  return { items, isLoading, save, remove, clear, find };
+  return { items, isLoading, save, remove, clear, find, update };
 }
