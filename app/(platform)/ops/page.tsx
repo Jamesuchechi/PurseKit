@@ -111,7 +111,7 @@ function OpsContent() {
             exit={{ opacity: 0, y: -20 }}
             className="space-y-8"
           >
-            <div className="bg-void/50 border border-border/50 rounded-[40px] p-10 shadow-2xl backdrop-blur-3xl overflow-hidden relative group">
+            <div className="glass-card rounded-[3rem] p-10 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.1)] overflow-hidden relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
               <div className="relative space-y-8">
                 <div className="space-y-4">

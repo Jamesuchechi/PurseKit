@@ -28,7 +28,7 @@ export function FileTree({ files, activeIndex, onSelect, className }: FileTreePr
   if (files.length === 0) return null;
 
   return (
-    <div className={cn("flex flex-col h-full bg-void/30 border-r border-border/50 w-64", className)}>
+    <div className={cn("flex flex-col h-full bg-background/40 dark:bg-void/30 backdrop-blur-md border-r border-border/50 w-64", className)}>
       <div className="p-4 border-b border-border/50 flex items-center gap-2">
         <FolderTree className="w-4 h-4 text-accent" />
         <span className="text-[10px] font-black uppercase tracking-widest text-muted">Project Explorer</span>

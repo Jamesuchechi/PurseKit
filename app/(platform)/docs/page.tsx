@@ -93,7 +93,7 @@ function DocsContent() {
             exit={{ opacity: 0, scale: 0.98 }}
             className="space-y-8"
           >
-            <div className="bg-void/50 border border-border/50 rounded-[40px] p-10 shadow-2xl backdrop-blur-3xl overflow-hidden relative group">
+            <div className="glass-card rounded-[3rem] p-10 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.1)] overflow-hidden relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none" />
               <div className="relative space-y-8">
                 <div className="space-y-4">
@@ -224,7 +224,7 @@ function TooltipIconButton({ icon: Icon, label, onClick }: { icon: LucideIcon; l
   return (
     <button 
       onClick={onClick}
-      className="p-3 rounded-2xl bg-void/50 border border-border/30 text-muted hover:text-indigo-400 hover:border-indigo-400/50 hover:bg-indigo-400/10 transition-all duration-300 group relative"
+      className="p-3 rounded-2xl bg-background/40 dark:bg-void/50 border border-border/30 text-muted hover:text-indigo-400 hover:border-indigo-400/50 hover:bg-indigo-400/10 transition-all duration-300 group relative"
     >
        <Icon className="w-5 h-5" />
        <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">

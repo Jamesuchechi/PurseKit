@@ -33,7 +33,7 @@ export function InfrastructureDraft({ files, onDownload }: InfrastructureDraftPr
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[600px]">
       {/* File Tree */}
-      <div className="lg:col-span-1 bg-void/50 border border-border/50 rounded-3xl p-4 overflow-y-auto styled-scrollbar">
+      <div className="lg:col-span-1 glass-card rounded-3xl p-4 overflow-y-auto styled-scrollbar">
         <div className="flex items-center gap-2 mb-4 px-2">
           <Terminal className="w-4 h-4 text-blue-400" />
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Manifest</span>
@@ -61,7 +61,7 @@ export function InfrastructureDraft({ files, onDownload }: InfrastructureDraftPr
       </div>
 
       {/* Editor Content */}
-      <div className="lg:col-span-3 flex flex-col bg-void/50 border border-border/50 rounded-3xl overflow-hidden shadow-2xl relative">
+      <div className="lg:col-span-3 flex flex-col glass-card rounded-3xl overflow-hidden shadow-2xl relative">
         <div className="bg-muted/20 border-b border-border/50 p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
@@ -90,7 +90,7 @@ export function InfrastructureDraft({ files, onDownload }: InfrastructureDraftPr
         </div>
 
         <div className="flex-1 overflow-auto p-0 relative font-mono text-sm group">
-          <pre className="p-6 text-foreground/90 leading-relaxed bg-void/50 h-full">
+          <pre className="p-6 text-foreground leading-relaxed h-full">
             <code>{activeFile?.content}</code>
           </pre>
           

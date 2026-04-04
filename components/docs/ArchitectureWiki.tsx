@@ -60,7 +60,7 @@ export function ArchitectureWiki({ content, onDownload }: ArchitectureWikiProps)
             const parent = block.parentElement;
             if (parent) {
               const div = document.createElement("div");
-              div.className = "flex justify-center p-6 bg-void/30 rounded-2xl border border-border/30 my-4 overflow-x-auto";
+              div.className = "flex justify-center p-6 bg-background/40 dark:bg-void/30 backdrop-blur-md rounded-2xl border border-border/30 my-4 overflow-x-auto";
               div.innerHTML = svg;
               parent.replaceWith(div);
             }
@@ -81,7 +81,7 @@ export function ArchitectureWiki({ content, onDownload }: ArchitectureWikiProps)
   };
 
   return (
-    <div className="flex flex-col bg-void/50 border border-border/50 rounded-[2.5rem] overflow-hidden shadow-2xl relative">
+    <div className="flex flex-col glass-card rounded-[2.5rem] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] relative">
       <div className="bg-muted/10 border-b border-border/50 p-6 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export function ArchitectureWiki({ content, onDownload }: ArchitectureWikiProps)
 
 function TooltipIconButton({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
-    <button className="p-3 rounded-2xl bg-void/50 border border-border/30 text-muted hover:text-indigo-400 hover:border-indigo-400/50 hover:bg-indigo-400/10 transition-all duration-300 group relative">
+    <button className="p-3 rounded-2xl bg-background/50 dark:bg-void/50 backdrop-blur-xl border border-border/30 text-muted hover:text-indigo-400 hover:border-indigo-400/50 hover:bg-indigo-400/10 transition-all duration-300 group relative">
        <Icon className="w-5 h-5" />
        <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
           {label}

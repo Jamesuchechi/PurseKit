@@ -545,7 +545,7 @@ function DevLensContent() {
               description="Transform your source code into structured insights, bug reports, and optimized patterns."
             />
 
-            <div className="bg-void/50 backdrop-blur-xl border border-border/50 rounded-3xl overflow-hidden shadow-2xl flex flex-col min-h-[500px]">
+            <div className="glass-card rounded-[2.5rem] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] flex flex-col min-h-[500px]">
               <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 bg-muted/20">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full bg-red-500/50" />

@@ -23,7 +23,7 @@ export function TerminalHub({ activeTab, onTabChange, children, className, isStr
   ] as const;
 
   return (
-    <div className={cn("flex flex-col h-full bg-void/30 backdrop-blur-xl border border-border/50 rounded-2xl overflow-hidden transition-all duration-300", className)}>
+    <div className={cn("flex flex-col h-full glass-card rounded-3xl overflow-hidden transition-all duration-300 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)]", className)}>
       {/* Tab Bar */}
       <div className="flex items-center justify-between px-2 bg-muted/20 border-b border-border/50">
         <div className="flex items-center gap-1 py-1">
