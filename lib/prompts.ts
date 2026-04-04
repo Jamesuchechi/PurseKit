@@ -38,6 +38,9 @@ export function devlensPrompt(code: string, language: string) {
     
     Rules for Bugs & Issues:
     - Every bug MUST include an explicit line number reference formatted exactly like [Line 14] or [Lines 14-16].
+
+    Rules for Diagrams:
+    - You SHOULD include a Mermaid flowchart (graph TD or flowchart TD) in the "Explanation" or "Complexity Analysis" section if it helps visualize the logic, data flow, or system architecture. Wrap it in a \`\`\`mermaid code block.
     
     Be concise, technical, and objective.
   `;

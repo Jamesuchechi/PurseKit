@@ -70,8 +70,9 @@ export function MermaidDiagram({ chart, isStreaming }: MermaidDiagramProps) {
         try {
           await mermaid.parse(repairedChart, { suppressErrors: true });
         } catch (parseError) {
-           console.warn("Mermaid Parse Error:", parseError);
-           if (!isStreaming) throw parseError; // Only throw if we are done
+           console.warn("Mermaid Parse Error (Incomplete Stream):", parseError);
+           if (isStreaming) return; // Skip rendering if still streaming and invalid
+           throw parseError; // Only throw if we are done
         }
 
         const { svg } = await mermaid.render(id, repairedChart);
@@ -81,9 +82,10 @@ export function MermaidDiagram({ chart, isStreaming }: MermaidDiagramProps) {
           setHasError(false);
         }
       } catch (e) {
-        console.error("Mermaid Render Failure:", e);
-        // If it throws, it's either incomplete (streaming) or broken syntax.
-        if (isMounted && !isStreaming) setHasError(true);
+        if (!isStreaming) {
+          console.error("Mermaid Render Failure:", e);
+          if (isMounted) setHasError(true);
+        }
       }
     }, isStreaming ? 400 : 0);
 

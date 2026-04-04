@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
+import { MermaidDiagram } from "@/components/specforge/MermaidDiagram";
 
 // The expected sections per devlensPrompt
 const SECTIONS = [
@@ -160,6 +161,7 @@ export function AnalysisOutput({
             title={section}
             content={content}
             isOpenDefault={true}
+            isStreaming={isStreaming}
             onApplyFix={section === "Refactor Suggestions" || section === "Explanation" ? onApplyFix : undefined}
           />
         );
@@ -172,11 +174,13 @@ function CollapsibleSection({
   title, 
   content, 
   isOpenDefault = false,
+  isStreaming,
   onApplyFix
 }: { 
   title: string; 
   content: string; 
   isOpenDefault?: boolean;
+  isStreaming: boolean;
   onApplyFix?: (code: string) => void;
 }) {
   const [isOpen, setIsOpen] = React.useState(isOpenDefault);
@@ -204,7 +208,7 @@ function CollapsibleSection({
             className="overflow-hidden"
           >
             <div className="px-6 pb-6 pt-2 prose prose-invert prose-p:leading-relaxed max-w-none text-foreground">
-              <MarkdownRenderer content={content} onApplyFix={onApplyFix} />
+              <MarkdownRenderer content={content} isStreaming={isStreaming} onApplyFix={onApplyFix} />
             </div>
           </motion.div>
         )}
@@ -213,13 +217,17 @@ function CollapsibleSection({
   );
 }
 
-function MarkdownRenderer({ content, onApplyFix }: { content: string; onApplyFix?: (code: string) => void }) {
+function MarkdownRenderer({ content, isStreaming, onApplyFix }: { content: string; isStreaming: boolean; onApplyFix?: (code: string) => void }) {
   return (
     <ReactMarkdown
       components={{
         code({ inline, className, children, ...props }: React.HTMLAttributes<HTMLElement> & { inline?: boolean; node?: unknown }) {
           const match = /language-(\w+)/.exec(className || "");
           const codeString = String(children).replace(/\n$/, "");
+
+          if (!inline && match?.[1] === "mermaid") {
+            return <MermaidDiagram chart={codeString} isStreaming={isStreaming} />;
+          }
 
           if (!inline && match) {
             return (
