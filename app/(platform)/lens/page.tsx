@@ -29,15 +29,31 @@ export default function LensPage() {
   const { save, update } = useHistory<{ messages: AiMessage[] }>("lens");
 
   const systemInstructions = React.useMemo(() => {
-    let base = "You are a helpful and intelligent AI assistant. Use markdown for your responses. Structure code blocks clearly with the appropriate programming language.\n\n";
+    let base = `You are Lens, a sophisticated and versatile AI companion designed by PulseKit. Your goal is to be a high-context partner for the user, capable of both elite technical assistance and nuanced social/emotional dialogue.
+
+CORE BEHAVIORS:
+1. Human-Centric: Prioritize natural, flowing conversation. Use warmth and intelligence. Do not behave like a rigid utility; behave like a world-class assistant with high EQ.
+2. Contextual Fluidity: If the user is being social, philosophical, or emotional, dive deep into those topics with them. Do not force technical structure onto human moments.
+3. Code Restraint: ONLY provide code snippets if they are specifically requested or truly essential to the answer. Never use code as a default "filler" for your responses.
+4. Social Intelligence: You are allowed (and encouraged) to engage in banter, offer emotional perspective, and maintain social bonds with the user.
+
+Use clean Markdown for structure, but keep it elegant and conversational.\n\n`;
+
     if (tone !== "normal") {
-      base += `Tone Directive: Adopt a strictly ${tone} tone and personality in all your responses.\n`;
+      const toneMap: Record<string, string> = {
+        professional: "Tone Directive: Be polished, authoritative, and sophisticated. Use high-level vocabulary and structured logic.",
+        casual: "Tone Directive: Be relaxed, friendly, and use a peer-to-peer vibe. Feel free to use contractions and a touch of personality.",
+        sarcastic: "Tone Directive: Be witty, sharp-tongued, and playfully dry. Use irony and clever rebuttals, but maintain underlying helpfulness.",
+        empathetic: "Tone Directive: Be deeply supportive, validating, and focused on emotional resonance. Prioritize active listening and psychological safety."
+      };
+      base += `${toneMap[tone] || ""}\n`;
     }
+    
     if (format !== "auto") {
-      if (format === "short") base += "Format Directive: Be incredibly concise, short, and precise. No fluff.\n";
-      if (format === "detailed") base += "Format Directive: Be highly detailed, comprehensive, and robust in your explanation.\n";
-      if (format === "bullet") base += "Format Directive: Respond exclusively using bullet points.\n";
-      if (format === "code") base += "Format Directive: Only provide the code block payload. No explanations, no greetings.\n";
+      if (format === "short") base += "Format Directive: Be incredibly concise and punchy. Eliminate all fluff.\n";
+      if (format === "detailed") base += "Format Directive: Be exhaustive and thorough, exploring every nuance of the topic.\n";
+      if (format === "bullet") base += "Format Directive: Organize your entire response using elegant bullet points.\n";
+      if (format === "code") base += "Format Directive: Provide only the technical payload/code. No conversational overhead.\n";
     }
     if (isSearchEnabled) {
       base += "capability: You have access to real-time web search results. If you need current data, acknowledge that you are searching and provide the most up-to-date information possible.\n";
@@ -161,7 +177,7 @@ export default function LensPage() {
   return (
     <div className={cn(
       "flex h-[100dvh] w-full transition-all duration-700 overflow-hidden",
-      theme === "default" && "bg-void",
+      theme === "default" && "bg-background",
       theme === "cyberpunk" && "bg-[#050505] text-[#00f3ff] [text-shadow:0_0_10px_rgba(0,243,255,0.3)]",
       theme === "glass" && "bg-gradient-to-br from-indigo-950/20 to-rose-950/20 backdrop-blur-3xl",
       theme === "minimal" && "bg-white text-black"

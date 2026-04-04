@@ -4,25 +4,19 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { 
   Zap, 
-  Brain, 
   FileText, 
-  BarChart3, 
   TrendingUp, 
   Clock, 
   Sparkles,
   ArrowUpRight,
   Filter,
-  ChevronDown,
-  BookOpen
+  ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { 
-  ActivityAreaChart,
-  ModuleDonutChart, 
-  AnalyticsStatCard 
-} from "@/components/analytics/AnalyticsCharts";
+import { ActivityAreaChart, ModuleDonutChart, AnalyticsStatCard } from "@/components/analytics/AnalyticsCharts";
 import { type HistoryItem, type Module } from "@/types";
 import { Button } from "@/components/ui/Button";
+import { AuditService, type AuditRecord } from "@/lib/audit";
 
 interface ActivityPoint {
   date: string;
@@ -53,6 +47,7 @@ function AnalyticsContent() {
     distribution: DistributionPoint[];
     stats: AnalyticsStats;
     recent: HistoryItem[];
+    auditTrail: AuditRecord[];
   } | null>(null);
 
   const [timeRange, setTimeRange] = React.useState("14d");
@@ -117,16 +112,19 @@ function AnalyticsContent() {
 
       const activity = Object.values(activityMap);
 
-      // ─── 3. Stats ─────────────────────────────────────────────
+      // ─── 3. Audit Trail ──────────────────────────────────────
+      const auditTrail = AuditService.getTrail();
 
+      // ─── 4. Stats ─────────────────────────────────────────────
       setData({
         activity,
         distribution,
         recent: allItems.slice(0, 10),
+        auditTrail: auditTrail,
         stats: {
           total: allItems.length,
-          savedHours: (allItems.length * 0.45).toFixed(1), // Estimate 27 mins per operation
-          peakDay: activity.reduce((max, curr) => curr.total > max.total ? curr : max, activity[0]).date,
+          savedHours: (allItems.length * 0.45).toFixed(1),
+          peakDay: activity.length > 0 ? activity.reduce((max, curr) => curr.total > max.total ? curr : max, activity[0]).date : "N/A",
           efficiency: allItems.length > 0 ? "98.4%" : "0%"
         }
       });
@@ -154,8 +152,8 @@ function AnalyticsContent() {
             <h1 className="text-4xl md:text-5xl font-display font-black tracking-tight text-foreground">
               Workspace <span className="gradient-text-emerald">Analytics</span>
             </h1>
-            <p className="mt-2 text-muted max-w-lg font-medium">
-              Real-time insights on your engineering velocity and module activity.
+            <p className="mt-2 text-muted-foreground max-w-lg font-medium">
+              Real-time insights on your engineering velocity and system audit logs.
             </p>
           </motion.div>
 
@@ -248,7 +246,7 @@ function AnalyticsContent() {
           </motion.div>
         </section>
 
-        {/* Global Activity Feed */}
+        {/* Global Activity Feed (Audit Trail) */}
         <section>
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -259,10 +257,10 @@ function AnalyticsContent() {
             <div className="flex items-center justify-between mb-8">
                <div className="space-y-1">
                   <h3 className="text-xl font-bold">Audit Trail</h3>
-                  <p className="text-xs text-muted-foreground">Latest workspace operations</p>
+                  <p className="text-xs text-muted-foreground">Detailed system and user operations</p>
                </div>
                <button className="p-2 rounded-xl bg-muted/50 hover:bg-muted transition-all border border-border/50">
-                  <Filter className="w-4 h-4 text-muted" />
+                  <Filter className="w-4 h-4 text-muted-foreground" />
                </button>
             </div>
 
@@ -270,53 +268,66 @@ function AnalyticsContent() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-border/50">
-                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted">Operation</th>
-                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted text-center">Module</th>
-                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted">Created At</th>
-                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted text-right">Reference ID</th>
+                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Event</th>
+                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Module</th>
+                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Timestamp</th>
+                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Performance</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
-                  {data.recent.length === 0 ? (
+                  {data.auditTrail.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-20 text-center text-muted text-sm italic">
-                         No operations recorded in your workspace yet.
+                      <td colSpan={4} className="py-20 text-center text-muted-foreground text-sm italic">
+                         No system events recorded yet.
                       </td>
                     </tr>
                   ) : (
-                    (isExpanded ? data.recent : data.recent.slice(0, 4)).map((item) => (
+                    (isExpanded ? data.auditTrail : data.auditTrail.slice(0, 6)).map((item) => (
                       <tr key={item.id} className="group hover:bg-muted/20 transition-all">
                         <td className="py-4 pr-4">
                           <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-background border border-border group-hover:bg-accent/10 group-hover:border-accent/30 transition-all">
-                              {item.module === "devlens" ? <Brain className="w-4 h-4 text-accent" /> : 
-                               item.module === "specforge" ? <FileText className="w-4 h-4 text-amber" /> : 
-                               item.module === "chartgpt" ? <BarChart3 className="w-4 h-4 text-violet" /> :
-                               item.module === "ops" ? <Zap className="w-4 h-4 text-emerald-500" /> :
-                               item.module === "lens" ? <Sparkles className="w-4 h-4 text-rose-400" /> :
-                               <BookOpen className="w-4 h-4 text-indigo-400" /> }
+                              {item.event === "GENERATE" ? <Zap className="w-4 h-4 text-emerald-500" /> : 
+                               item.event === "ERROR" ? <TrendingUp className="w-4 h-4 text-rose-500 rotate-180" /> : 
+                               item.event === "EXPORT" ? <FileText className="w-4 h-4 text-violet" /> :
+                               item.event === "PROVIDER_SWITCH" ? <ArrowUpRight className="w-4 h-4 text-amber" /> :
+                               <Sparkles className="w-4 h-4 text-indigo-400" /> }
                             </div>
-                            <span className="text-sm font-bold text-foreground">
-                              {item.title}
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-foreground">
+                                {item.event}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground truncate max-w-[300px]">
+                                {item.message}
+                              </span>
+                            </div>
                           </div>
                         </td>
                         <td className="py-4 text-center">
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border tracking-wide uppercase ${
-                            item.module === "devlens" ? "bg-accent/10 text-accent border-accent/20" : 
-                            item.module === "specforge" ? "bg-amber/10 text-amber border-amber/20" : 
-                            item.module === "lens" ? "bg-rose-400/10 text-rose-400 border-rose-400/20" :
-                            "bg-violet/10 text-violet border-violet/20"
-                          }`}>
+                          <span className={cn(
+                            "text-[10px] font-bold px-2.5 py-1 rounded-full border tracking-wide uppercase",
+                            item.module === "devlens" && "bg-accent/10 text-accent border-accent/20",
+                            item.module === "specforge" && "bg-amber/10 text-amber border-amber/20",
+                            item.module === "lens" && "bg-rose-400/10 text-rose-400 border-rose-400/20",
+                            item.module === "system" && "bg-muted text-muted-foreground border-border/50",
+                            !["devlens", "specforge", "lens", "system"].includes(item.module) && "bg-violet/10 text-violet border-violet/20"
+                          )}>
                             {item.module}
                           </span>
                         </td>
-                        <td className="py-4 text-sm text-muted tabular-nums">
-                          {new Date(item.createdAt).toLocaleString()}
+                        <td className="py-4 text-sm text-muted-foreground tabular-nums">
+                          {new Date(item.timestamp).toLocaleString()}
                         </td>
                         <td className="py-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5 text-[10px] font-mono text-muted tabular-nums uppercase">
-                            {item.id.substring(0, 8)} <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="text-[10px] font-mono text-muted-foreground tabular-nums uppercase">
+                              {item.id.substring(0, 8)}
+                            </div>
+                            {item.metadata && typeof item.metadata.duration === "number" && (
+                              <div className="text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">
+                                {item.metadata.duration}ms
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -326,16 +337,16 @@ function AnalyticsContent() {
               </table>
             </div>
 
-            {data.recent.length > 4 && (
+            {data.auditTrail.length > 6 && (
               <div className="mt-8 flex justify-center border-t border-border/30 pt-6">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-muted hover:text-emerald-500 hover:bg-emerald-500/5 gap-2 h-10 px-6"
+                  className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/5 gap-2 h-10 px-6"
                 >
                   <ChevronDown className={cn("w-4 h-4 transition-transform duration-500", isExpanded && "rotate-180")} />
-                  {isExpanded ? "Show Less" : `Show More (${data.recent.length - 5} others)`}
+                  {isExpanded ? "Show Less" : `Show More (${data.auditTrail.length - 6} events)`}
                 </Button>
               </div>
             )}
