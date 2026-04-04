@@ -29,6 +29,7 @@ import { type AiMessage } from "@/lib/ai";
 
 interface SpeechRecognitionEvent extends Event {
   results: {
+    length: number;
     [key: number]: {
       [key: number]: {
         transcript: string;
@@ -37,13 +38,17 @@ interface SpeechRecognitionEvent extends Event {
   };
 }
 
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
 interface SpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
   onstart: (event: Event) => void;
   onresult: (event: SpeechRecognitionEvent) => void;
-  onerror: (event: Event) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
   onend: (event: Event) => void;
   start: () => void;
   stop: () => void;
@@ -125,28 +130,35 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
   const { output, isLoading, run, setOutput } = useAiStream();
 
   const getInvestorInfo = React.useCallback((name?: string) => {
-    return INVESTORS.find((i) => name?.includes(i.name)) || INVESTORS[0];
+    const searchName = name?.toLowerCase() || "";
+    return INVESTORS.find((i) => searchName.includes(i.name.toLowerCase())) || INVESTORS[0];
   }, []);
 
   const speak = React.useCallback((text: string, investorName: string) => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     
+    // Pre-clear to avoid overlapped speech
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    const investor = getInvestorInfo(investorName);
     
-    if (investor.name === "Sarah") {
-      utterance.pitch = 1.3;
-      utterance.rate = 1.1;
-    } else if (investor.name === "Leo") {
-      utterance.pitch = 0.8;
-      utterance.rate = 0.9;
-    } else {
-      utterance.pitch = 1.0;
-      utterance.rate = 1.0;
-    }
-    
-    window.speechSynthesis.speak(utterance);
+    // Tiny delay ensures cancel() propagates before speak() starts
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      const investor = getInvestorInfo(investorName);
+      
+      if (investor.name === "Sarah") {
+        utterance.pitch = 1.3;
+        utterance.rate = 1.1;
+      } else if (investor.name === "Leo") {
+        utterance.pitch = 0.8;
+        utterance.rate = 0.9;
+      } else {
+        utterance.pitch = 1.0;
+        utterance.rate = 1.0;
+      }
+      
+      utterance.lang = "en-US";
+      window.speechSynthesis.speak(utterance);
+    }, 50);
   }, [getInvestorInfo]);
 
   const MAX_TURNS = 8;
@@ -167,12 +179,10 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
     }
   }, [prdText, run]);
 
-  // ── Process AI output when streaming finishes ─────────────────────────────
   React.useEffect(() => {
     if (isLoading || !output || isProcessingOutput.current) return;
 
     isProcessingOutput.current = true;
-
     const currentStage = stageRef.current;
 
     if (currentStage !== "VERDICT") {
@@ -196,6 +206,12 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
 
         setMessages((prev) => [...prev, aiCrucibleMsg]);
         setHistory((prev) => [...prev, aiMsg]);
+        
+        // Speak if voice is enabled - BEFORE clearing output
+        if (isVoiceEnabled) {
+          speak(content, investorName);
+        }
+
         setOutput("");
 
         if (currentStage === "INTRO") {
@@ -213,18 +229,17 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
     }
 
     isProcessingOutput.current = false;
-    
-    // Speak if voice is enabled
-    if (isVoiceEnabled && !isLoading) {
-      const investorMatch = output.match(/\[INVESTOR:\s*(.*?)\]/i);
-      const contentMatch = output.match(/\[CONTENT:\s*(.*?)\]/i);
-      const investorName = investorMatch?.[1].trim() || "Marc";
-      const content = contentMatch?.[1].trim() || output.replace(/\[.*?\]/g, "").trim();
-      if (content && stageRef.current !== "VERDICT") {
-        speak(content, investorName);
+  }, [isLoading, output, setOutput, isVoiceEnabled, speak]);
+
+  // Effect to replay last message if voice is enabled AFTER message arrived
+  React.useEffect(() => {
+    if (isVoiceEnabled && messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.role === "investor" && !isLoading) {
+        speak(lastMsg.content, lastMsg.investor || "Marc");
       }
     }
-  }, [isLoading, output, setOutput, isVoiceEnabled, speak]);
+  }, [isVoiceEnabled, messages, isLoading, speak]);
 
   // ── Send user message ─────────────────────────────────────────────────────
   const handleSend = async (e?: React.FormEvent) => {
@@ -271,17 +286,25 @@ export function CrucibleArena({ prdText, onRestart }: CrucibleArenaProps) {
     }
 
     const recognition: SpeechRecognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = "en-US";
+
+    // Capture initial value for concatenation
+    const currentVal = inputValue;
 
     recognition.onstart = () => setIsListening(true);
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0][0].transcript;
-      setInputValue((prev) => prev + (prev ? " " : "") + transcript);
+      let sessionTranscript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        sessionTranscript += event.results[i][0].transcript;
+      }
+      setInputValue(currentVal ? `${currentVal.trim()} ${sessionTranscript.trim()}` : sessionTranscript.trim());
+    };
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error("Speech Recognition Error:", event.error);
       setIsListening(false);
     };
-    recognition.onerror = () => setIsListening(false);
     recognition.onend = () => setIsListening(false);
 
     recognitionRef.current = recognition;

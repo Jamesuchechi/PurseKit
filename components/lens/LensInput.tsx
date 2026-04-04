@@ -21,15 +21,31 @@ interface LensInputProps {
   onNewChat?: () => void;
 }
 
+interface ISpeechRecognitionEvent {
+  results: {
+    length: number;
+    [key: number]: {
+      [key: number]: {
+        transcript: string;
+      };
+    };
+  };
+}
+
+interface ISpeechRecognitionErrorEvent {
+  error: string;
+}
+
 interface ISpeechRecognition {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
   onstart: (() => void) | null;
-  onresult: ((event: { results: Array<Array<{ transcript: string }>> }) => void) | null;
-  onerror: (() => void) | null;
+  onresult: ((event: ISpeechRecognitionEvent) => void) | null;
+  onerror: ((event: ISpeechRecognitionErrorEvent) => void) | null;
   onend: (() => void) | null;
   start: () => void;
+  stop: () => void;
 }
 
 type SpeechRecognitionConstructor = new () => ISpeechRecognition;
@@ -51,6 +67,7 @@ export function LensInput({ value, onChange, onSubmit, isLoading, className, onN
   
   // Voice Dictation State
   const [isListening, setIsListening] = React.useState(false);
+  const recognitionRef = React.useRef<ISpeechRecognition | null>(null);
 
   // Slash Command State
   const [showCommands, setShowCommands] = React.useState(false);
@@ -167,6 +184,7 @@ export function LensInput({ value, onChange, onSubmit, isLoading, className, onN
   // 4. Voice Dictation
   const toggleListening = () => {
     if (isListening) {
+      recognitionRef.current?.stop();
       setIsListening(false);
       return;
     }
@@ -183,21 +201,44 @@ export function LensInput({ value, onChange, onSubmit, isLoading, className, onN
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = 'en-US';
 
+    // Store the initial value to append from
+    const currentVal = value;
+
     recognition.onstart = () => setIsListening(true);
-    recognition.onresult = (event: { results: Array<Array<{ transcript: string }>> }) => {
-      const transcript = event.results[0][0].transcript;
-      const newValue = value ? `${value} ${transcript}` : transcript;
+    
+    recognition.onresult = (event) => {
+      let sessionTranscript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        sessionTranscript += event.results[i][0].transcript;
+      }
+      
+      const newValue = currentVal 
+        ? `${currentVal.trim()} ${sessionTranscript.trim()}` 
+        : sessionTranscript.trim();
+        
       onChange({ target: { value: newValue } } as unknown as React.ChangeEvent<HTMLTextAreaElement>);
     };
-    recognition.onerror = () => setIsListening(false);
+
+    recognition.onerror = (event) => {
+      console.error("Speech Recognition Error:", event.error);
+      setIsListening(false);
+    };
+
     recognition.onend = () => setIsListening(false);
     
+    recognitionRef.current = recognition;
     recognition.start();
   };
+
+  React.useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, []);
 
   return (
     <div className={cn("relative flex flex-col p-2 bg-background/80 backdrop-blur-xl border border-border/50 rounded-[2rem] shadow-xl shadow-black/5 focus-within:border-accent/50 focus-within:ring-4 focus-within:ring-accent/10 transition-all", className)}>

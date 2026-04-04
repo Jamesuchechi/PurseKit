@@ -39,26 +39,31 @@ export function MermaidDiagram({ chart, isStreaming }: MermaidDiagramProps) {
           .replace(/--\|/g, "-->|")
           .trim();
 
-        // If it contains PlantUML actor/boundary/database and sequence arrows, convert to sequenceDiagram
-        const isSequence = repairedChart.includes("->>") || repairedChart.includes("->");
-        
-        if (isSequence && !repairedChart.startsWith("sequenceDiagram")) {
-          // Clean up PlantUML specific declarations
-          repairedChart = repairedChart
-            .replace(/actor\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
-            .replace(/boundary\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
-            .replace(/database\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
-            .replace(/component\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
-            .replace(/control\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
-            .replace(/entity\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
-            .replace(/(\w+)\s*->>\s*(\w+)\s*:\s*(.+)/g, '$1->>$2: $3');
-          
-          repairedChart = `sequenceDiagram\n${repairedChart}`;
-        }
+        // 1. Identify Existing Header
+        const HEADERS = ["graph ", "flowchart ", "sequenceDiagram", "classDiagram", "stateDiagram", "erDiagram", "gantt", "pie", "gitGraph"];
+        const hasHeader = HEADERS.some(h => repairedChart.startsWith(h));
 
-        // Ensure chart has a header if not already set
-        if (!repairedChart.startsWith("graph ") && !repairedChart.startsWith("flowchart ") && !repairedChart.startsWith("sequenceDiagram") && !repairedChart.startsWith("classDiagram") && !repairedChart.startsWith("stateDiagram") && !repairedChart.startsWith("erDiagram")) {
-          repairedChart = `graph TD\n${repairedChart}`;
+        // 2. Only attempt sequence-conversion fix if NO header exists
+        if (!hasHeader) {
+          // If it contains sequence arrows (-> or ->>) but NOT flowchart arrows (-->)
+          const isSequence = (repairedChart.includes("->>") || repairedChart.includes("->")) && !repairedChart.includes("-->");
+          
+          if (isSequence) {
+            // Clean up PlantUML specific declarations
+            repairedChart = repairedChart
+              .replace(/actor\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+              .replace(/boundary\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+              .replace(/database\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+              .replace(/component\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+              .replace(/control\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+              .replace(/entity\s+(\w+)(?:\s+as\s+["'](.+?)["'])?/g, 'participant $1')
+              .replace(/(\w+)\s*->>\s*(\w+)\s*:\s*(.+)/g, '$1->>$2: $3');
+            
+            repairedChart = `sequenceDiagram\n${repairedChart}`;
+          } else {
+            // Default to graph TD if no header and no sequence indicators
+            repairedChart = `graph TD\n${repairedChart}`;
+          }
         }
 
         // Try parsing first
